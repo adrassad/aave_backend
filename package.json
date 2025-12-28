@@ -20,8 +20,10 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "ethers": "^6.16.0",
-    "express": "^5.2.1"
-  },
-  "devDependencies": {}
+    "express": "^5.2.1",
+    "node-cron": "^4.2.1",
+    "pg": "^8.16.3"
+  }
 }
