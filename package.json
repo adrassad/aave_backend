@@ -1,0 +1,27 @@
+{
+  "name": "aave-backend",
+  "version": "1.0.0",
+  "description": "A Web3 analytics backend that indexes DeFi protocol data and historical prices to provide real-time portfolio metrics and risk analysis.",
+  "keywords": [],
+  "homepage": "https://github.com/adrassad/aave-backend#readme",
+  "bugs": {
+    "url": "https://github.com/adrassad/aave-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/adrassad/aave-backend.git"
+  },
+  "license": "ISC",
+  "author": "Adras Sad",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "ethers": "^6.16.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {}
+}
