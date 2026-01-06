@@ -5,7 +5,9 @@ import { loadAssets } from './services/asset.service.js';
 import { startPriceUpdater } from './cron/priceUpdater.js';
 import { ERC20_ABI } from './blockchain/erc20.js';
 import { provider } from './blockchain/provider.js';
+import { startBot } from './bot/bot.js';
 import { ethers } from 'ethers';
+
 
 async function bootstrap() {
   try {
@@ -33,6 +35,8 @@ async function bootstrap() {
 
     startPriceUpdater(oracle);
     startServer();
+    startBot();
+
 
   } catch (e) {
     console.error('❌ Failed to start:', e);
