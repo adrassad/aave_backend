@@ -1,20 +1,12 @@
-import { userService } from '../../services/user.service.js';
+// src/bot/handlers/walletAdd.hears.js
+import { BUTTONS } from '../constants/buttons.js';
+import { SCENES } from '../constants/scenes.js';
+import { RETURNS } from '../constants/returns.js';
 
-export function walletAddHandler(bot) {
-  bot.action('wallet:add', async (ctx) => {
-    await ctx.answerCbQuery(); // закрываем «часики» на кнопке
-
-    const isPro = await userService.isPro(ctx.from.id);
-
-    // TODO: посчитать количество кошельков пользователя
-    const walletCount = 1; // временно
-
-    if (!isPro && walletCount >= 1) {
-      return ctx.reply(
-        '❌ Бесплатно можно отслеживать только 1 кошелек.\n\nОформите Pro подписку.'
-      );
-    }
-
-    await ctx.reply('Введите адрес кошелька:');
+export function walletAddHears(bot) {
+  bot.hears(BUTTONS.ADD_WALLET, async (ctx) => {
+    // ⬅️ ВАЖНО: сохраняем откуда пришли
+    ctx.session.returnTo = RETURNS.MAIN_MENU;
+    await ctx.scene.enter(SCENES.ADD_WALLET);
   });
 }
