@@ -1,9 +1,12 @@
+// src/bot/keyboards/main.keyboard.js
 import { Markup } from 'telegraf';
+import { BUTTONS } from '../constants/buttons.js';
 
 export function mainKeyboard() {
-  return Markup.inlineKeyboard([
-    [Markup.button.callback('➕ Добавить кошелек', 'wallet:add')],
-    [Markup.button.callback('➖ Удалить кошелек', 'wallet:remove')],
-    [Markup.button.callback('⚡ Upgrade Pro', 'subscription:upgrade')]
-  ]);
+  return Markup.keyboard([
+    [BUTTONS.ADD_WALLET],
+    [BUTTONS.REMOVE_WALLET]
+  ])
+    .resize()
+    .persistent();
 }

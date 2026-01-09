@@ -55,5 +55,27 @@ export async function initDb() {
     )
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS wallets (
+      id SERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL
+        REFERENCES users(telegram_id)
+        ON DELETE CASCADE,
+
+      address TEXT NOT NULL,
+      chain TEXT NOT NULL DEFAULT 'arbitrum',
+      label TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+
+      UNIQUE (user_id, address)
+    )
+  `);
+
+  await query(`
+    CREATE INDEX IF NOT EXISTS idx_wallets_user_id
+    ON wallets(user_id);
+  `);
+
+
   console.log('✅ All tables initialized');
 }

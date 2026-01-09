@@ -1,19 +1,25 @@
-import { Telegraf } from 'telegraf';
-import { registerCommands } from './commands/index.js';
+import { Telegraf, Scenes, session } from 'telegraf';
+import { ENV } from '../config/env.js';
+import { addWalletScene } from './scenes/addWallet.scene.js';
 import { registerHandlers } from './handlers/index.js';
-
-let bot;
+import { registerCommands } from './commands/index.js';
+import { removeWalletScene } from './scenes/removeWallet.scene.js';
 
 export function startBot() {
-  if (bot) return bot;
+  const bot = new Telegraf(ENV.BOT_TOKEN);
 
-  bot = new Telegraf(process.env.BOT_TOKEN);
+  const stage = new Scenes.Stage([
+    addWalletScene,
+    removeWalletScene
+  ]);
+
+  bot.use(session());
+  bot.use(stage.middleware());
 
   registerCommands(bot);
   registerHandlers(bot);
 
   bot.launch();
-
   console.log('🤖 Telegram bot started');
 
   return bot;
