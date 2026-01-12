@@ -8,5 +8,6 @@ export function mainKeyboard() {
     [BUTTONS.REMOVE_WALLET]
   ])
     .resize()
-    .persistent();
+    .persistent()
+    ;
 }

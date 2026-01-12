@@ -2,6 +2,12 @@ import { createIfNotExists } from '../../services/user.service.js';
 import { mainKeyboard } from '../keyboards/main.keyboard.js';
 
 export function startCommand(bot) {
+  bot.telegram.setMyCommands([
+    { command: 'start', description: '🚀 Перезапустить бота' },
+    { command: 'status', description: '💳 Статус подписки' },
+    //{ command: 'help', description: '❓ Показать все команды' },
+    { command: 'positions', description: '📊 Показать мои позиции' },    
+  ]);
   bot.start(async (ctx) => {
     if (ctx.scene?.current) {
       await ctx.scene.leave();
