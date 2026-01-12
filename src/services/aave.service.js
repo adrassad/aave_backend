@@ -38,7 +38,7 @@ export async function getWalletPositions(walletAddress) {
     }
   }
 
-  console.log('borrows: ',borrows);
+  //console.log('borrows: ',borrows);
 
   return { supplies, borrows };
 }

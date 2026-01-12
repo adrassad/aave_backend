@@ -21,7 +21,7 @@ async function bootstrap() {
 
     // load reserves
     const reserves = await pool.getReservesList();
-    console.log('reserves: ',reserves);
+    //console.log('reserves: ',reserves);
     const assets = [];
     for (const address of reserves) {
       try {
@@ -33,7 +33,7 @@ async function bootstrap() {
         assets.push({ symbol, address, decimals: Number(decimals) });
       } catch {}
     }
-    console.log('assets',assets);
+    //('assets',assets);
     await loadAssets(assets);
     await loadAssetsToCache();
     console.log(`✅ Loaded ${assets.length} assets`);

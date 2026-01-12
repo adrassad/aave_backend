@@ -60,7 +60,7 @@ export function positionsCommand(bot) {
 
 
       if (borrows.length) {
-        console.log('borrows: ', borrows);
+        //console.log('borrows: ', borrows);
         let text = '📉 Borrowed:\n';
         for (const b of borrows) {
           text += `• ${b.symbol}: ${(b.amount ?? 0).toFixed(5)} (${(b.usd ?? 0).toFixed(2)} USD)`;
