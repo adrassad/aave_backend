@@ -1,14 +1,15 @@
+//src/services/aave.service.js
 import { getUserAavePositions } from '../blockchain/aave/aave.dataProvider.js';
 import { getAssetPriceUSD } from './price.service.js';
 import { getAssetByAddress } from './asset.service.js';
 
 export async function getWalletPositions(walletAddress) {
-  const reserves = await getUserAavePositions(walletAddress);
+  const { positions, healthFactor } = await getUserAavePositions(walletAddress);
 
   const supplies = [];
   const borrows = [];
 
-  for (const r of reserves) {
+  for (const r of positions) {
     const asset = await getAssetByAddress(r.asset);
     if (!asset) continue;
 
@@ -40,5 +41,5 @@ export async function getWalletPositions(walletAddress) {
 
   //console.log('borrows: ',borrows);
 
-  return { supplies, borrows };
+  return { supplies, borrows, healthFactor};
 }

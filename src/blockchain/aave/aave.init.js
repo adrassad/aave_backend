@@ -7,12 +7,14 @@ import { ENV } from '../../config/env.js';
 const ADDRESSES_PROVIDER_ABI = [
   'function getPool() view returns (address)',
   'function getPriceOracle() view returns (address)',
-  'function getPoolDataProvider() view returns (address)'
+  'function getPoolDataProvider() view returns (address)',
+  'function getUserReservesData(address pool, address user) view returns (tuple(address underlyingAsset,uint256 scaledATokenBalance,bool usageAsCollateralEnabledOnUser,uint256 stableBorrowRate,uint256 scaledVariableDebt,uint256 principalStableDebt,uint256 stableBorrowLastUpdateTimestamp)[], uint256)'
 ];
 
 // Контракт Pool (для списка резервов)
 const POOL_ABI = [
-  'function getReservesList() view returns (address[])'
+  'function getReservesList() view returns (address[])',
+  'function getUserAccountData(address user) view returns (uint256 totalCollateralETH,uint256 totalDebtETH,uint256 availableBorrowsETH,uint256 currentLiquidationThreshold,uint256 ltv,uint256 healthFactor)'
 ];
 
 export async function initAave() {
