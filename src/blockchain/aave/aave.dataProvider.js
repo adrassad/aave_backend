@@ -32,6 +32,10 @@ export async function getUserAavePositions(userAddress) {
 
   const positions = [];
 
+  // Получаем health factor
+  const accountData = await pool.getUserAccountData(userAddress);
+  const healthFactor = Number(accountData.healthFactor) / 1e18;
+
   for (const asset of reservesList) {
     const data = await dataProvider.getUserReserveData(asset, userAddress);
     const [
@@ -62,5 +66,5 @@ export async function getUserAavePositions(userAddress) {
     }
   }
 
-  return positions;
+  return {positions, healthFactor};
 }

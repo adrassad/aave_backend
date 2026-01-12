@@ -40,7 +40,7 @@ export function positionsCommand(bot) {
     await ctx.answerCbQuery(); // убираем "часики" Telegram
 
     try {
-      const { supplies, borrows } = await getWalletPositions(wallet.address);
+      const { supplies, borrows, healthFactor} = await getWalletPositions(wallet.address);
 
       if (!supplies.length && !borrows.length) {
         return ctx.reply(`💼 Кошелек: ${wallet.address}\nℹ️ Нет активных позиций в Aave.`);
@@ -69,6 +69,8 @@ export function positionsCommand(bot) {
         messages.push(text);
       }
 
+      messages.push(`🛡 Health Factor: ${healthFactor.toFixed(3)}`);
+      
       // Отправляем все сообщения
       for (const msg of messages) {
         await ctx.reply(msg);
