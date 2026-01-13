@@ -44,15 +44,17 @@ export async function getWalletPositions(walletAddress) {
       totalBorrowedUsd += usd;
     }
 
-    totals = {
-      suppliedUsd: totalSuppliedUsd,
-      borrowedUsd: totalBorrowedUsd,
-      netUsd: totalSuppliedUsd - totalBorrowedUsd
-    };
-
   }
 
   //console.log('borrows: ',borrows);
 
-  return { supplies, borrows, totals, healthFactor};
+  return { 
+    supplies, 
+    borrows, 
+    totals: {
+      suppliedUsd: totalSuppliedUsd,
+      borrowedUsd: totalBorrowedUsd,
+      netUsd: totalSuppliedUsd - totalBorrowedUsd
+    }, 
+    healthFactor};
 }
