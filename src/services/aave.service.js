@@ -44,11 +44,11 @@ export async function getWalletPositions(walletAddress) {
       totalBorrowedUsd += usd;
     }
 
-    totals.push( {
+    totals = {
       suppliedUsd: totalSuppliedUsd,
       borrowedUsd: totalBorrowedUsd,
       netUsd: totalSuppliedUsd - totalBorrowedUsd
-    });
+    };
 
   }
 
