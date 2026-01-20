@@ -1,6 +1,6 @@
 // src/bot/commands/positions.command.js
 import { Markup } from 'telegraf';
-import { getUserWallets } from '../../services/wallet.service.js';
+import { getUserWallets } from '../../services/wallet/wallet.service.js';
 import { getWalletPositions } from '../../services/aave.service.js';
 
 export function positionsCommand(bot) {

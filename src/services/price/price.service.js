@@ -1,7 +1,7 @@
 //src/services/price.service.js
-import { PRICE_CACHE } from '../cache/memory.cache.js';
-import * as priceRepo from '../db/repositories/price.repo.js';
-import * as assetRepo from '../db/repositories/asset.repo.js';
+import { PRICE_CACHE } from '../../cache/memory.cache.js';
+import * as priceRepo from '../../db/repositories/price.repo.js';
+import * as assetRepo from '../../db/repositories/asset.repo.js';
 
 /**
  * Цена 1 токена в USD по адресу

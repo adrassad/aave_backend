@@ -1,4 +1,4 @@
-import { getUserStatus, isPro } from './user.service.js';
+import { getUserStatus, isPro } from '../user/user.service.js';
 
 const FREE_WALLETS_LIMIT = 1;
 const PRO_WALLETS_LIMIT = 10;

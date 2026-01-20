@@ -1,5 +1,5 @@
 // src/bot/handlers/walletDelete.handler.js
-import { removeUserWallet } from '../../services/wallet.service.js';
+import { removeUserWallet } from '../../services/wallet/wallet.service.js';
 
 export function walletDeleteHandler(bot) {
   bot.action(/^WALLET_DELETE:/, async (ctx) => {

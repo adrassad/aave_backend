@@ -2,7 +2,7 @@
 import { Scenes, Markup } from 'telegraf';
 import { SCENES } from '../constants/scenes.js';
 import { BUTTONS } from '../constants/buttons.js';
-import { addUserWallet } from '../../services/wallet.service.js';
+import { addUserWallet } from '../../services/wallet/wallet.service.js';
 import { handleReturn } from '../utils/returnTo.js';
 
 export const addWalletScene = new Scenes.BaseScene(SCENES.ADD_WALLET);

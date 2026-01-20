@@ -1,4 +1,4 @@
-import { createIfNotExists } from '../../services/user.service.js';
+import { createIfNotExists } from '../../services/user/user.service.js';
 import { mainKeyboard } from '../keyboards/main.keyboard.js';
 
 export function startCommand(bot) {
