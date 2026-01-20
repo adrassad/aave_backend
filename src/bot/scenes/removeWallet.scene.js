@@ -1,6 +1,6 @@
 import { Scenes, Markup } from 'telegraf';
 import { SCENES } from '../constants/scenes.js';
-import { getUserWallets } from '../../services/wallet.service.js';
+import { getUserWallets } from '../../services/wallet/wallet.service.js';
 
 export const removeWalletScene = new Scenes.BaseScene(SCENES.REMOVE_WALLET);
 

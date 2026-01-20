@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAssetBySymbol } from '../../services/asset.service.js';
+import { getAssetBySymbol } from '../../services/asset/asset.service.js';
 import { PRICE_CACHE } from '../../cache/memory.cache.js';
 
 const router = express.Router();

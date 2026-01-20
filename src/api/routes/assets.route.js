@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllAssets } from '../../services/asset.service.js';
+import { getAllAssets } from '../../services/asset/asset.service.js';
 
 const router = express.Router();
 

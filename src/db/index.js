@@ -1,16 +1,17 @@
-import pkg from 'pg';
-import { ENV } from '../config/env.js';
+// src/db/index.js
+import { PostgresClient } from './postgres.client.js';
+import { createUserRepository } from './repositories/user.repo.js';
+import { createNetworkRepository } from './repositories/network.repo.js';
+import { createAssetRepository } from './repositories/asset.repo.js';
+import { createPriceRepository } from './repositories/price.repo.js';
+import { createWalletRepository } from './repositories/wallet.repo.js';
 
-const { Pool } = pkg;
+const dbClient = new PostgresClient();
 
-export const pool = new Pool({
-  connectionString: ENV.DATABASE_URL
-});
-
-export async function query(text, params) {
-  const start = Date.now();
-  const res = await pool.query(text, params);
-  const duration = Date.now() - start;
-  //console.log('executed query', { text, duration, rows: res.rowCount });
-  return res;
-}
+export const db = {
+  users: createUserRepository(dbClient),
+  networks: createNetworkRepository(dbClient),
+  assets: createAssetRepository(dbClient),
+  prices: createPriceRepository(dbClient),
+  wallets: createWalletRepository(dbClient)
+};

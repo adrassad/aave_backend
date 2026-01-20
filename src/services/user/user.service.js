@@ -1,14 +1,14 @@
 // src/services/user.service.js
-import * as userRepo from '../db/repositories/user.repo.js';
+import {db} from '../../db/index.js';
 
 /**
  * Создать пользователя, если его нет
  */
 export async function createIfNotExists(telegramId) {
-  const user = await userRepo.findByTelegramId(telegramId);
+  const user = await db.users.findByTelegramId(telegramId);
 
   if (!user) {
-    await userRepo.create(telegramId);
+    await db.users.create(telegramId);
     return {
       telegram_id: telegramId,
       subscription_level: 'free'
@@ -22,7 +22,7 @@ export async function createIfNotExists(telegramId) {
  * Проверка PRO-подписки
  */
 export async function isPro(telegramId) {
-  const user = await userRepo.findByTelegramId(telegramId);
+  const user = await db.users.findByTelegramId(telegramId);
 
   if (!user) return false;
   if (user.subscription_level !== 'pro') return false;
@@ -35,7 +35,7 @@ export async function isPro(telegramId) {
  * Статус пользователя (для /status)
  */
 export async function getUserStatus(telegramId) {
-  const user = await userRepo.findByTelegramId(telegramId);
+  const user = await db.users.findByTelegramId(telegramId);
 
   if (!user) {
     return null;

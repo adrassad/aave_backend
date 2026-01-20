@@ -1,4 +1,4 @@
-import { getUserStatus } from '../../services/user.service.js';
+import { getUserStatus } from '../../services/user/user.service.js';
 
 export function statusCommand(bot) {
   bot.command('status', async (ctx) => {

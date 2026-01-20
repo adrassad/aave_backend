@@ -1,16 +1,9 @@
 // src/services/wallet.service.js
 import { ethers } from 'ethers';
-import { getAssetPriceUSD } from './price.service.js';
-import { getWalletPositions } from './aave.service.js';
-import { assertCanAddWallet } from './subscription.service.js'
-
-import {
-  addWallet,
-  removeWallet,
-  getWalletsByUser,
-  countWalletsByUser,
-  walletExists,
-} from '../db/repositories/wallet.repo.js';
+import { getAssetPriceUSD } from '../price/price.service.js';
+import { getWalletPositions } from '../aave.service.js';
+import { assertCanAddWallet } from '../subscription/subscription.service.js'
+import { db } from '../../db/index.js';
 
 function normalizeAddress(address) {
   return address.trim().toLowerCase();
@@ -19,7 +12,7 @@ function normalizeAddress(address) {
 export async function addUserWallet(userId, address, label = null) {
   
   //🔐 ПРОВЕРКА ПОДПИСКИ 
-  const count = await countWalletsByUser(userId);
+  const count = await db.wallets.countWalletsByUser(userId);
   await assertCanAddWallet(userId, count);
 
   // 🔐 Проверка адреса
@@ -30,12 +23,12 @@ export async function addUserWallet(userId, address, label = null) {
   const normalizedAddress = normalizeAddress(address);
 
   // 🔁 Проверка на существование
-  const exists = await walletExists(userId, normalizedAddress);
+  const exists = await db.wallets.walletExists(userId, normalizedAddress);
   if (exists) {
     throw new Error('WALLET_ALREADY_EXISTS');
   }
 
-  return addWallet(userId, normalizedAddress, 'arbitrum', label);
+  return db.wallets.addWallet(userId, normalizedAddress, 'arbitrum', label);
 }
 
 export async function removeUserWallet(userId, walletId) {
@@ -49,7 +42,7 @@ export async function removeUserWallet(userId, walletId) {
 }
 
 export async function getUserWallets(userId) {
-  return getWalletsByUser(userId);
+  return db.wallets.getWalletsByUser(userId);
 }
 
 /*
