@@ -4,9 +4,10 @@ import { BaseProtocol } from "../../protocols/base.protocol.js";
 import {
   ADDRESSES_PROVIDER_ABI,
   AAVE_POOL_ABI,
-  ERC20_ABI,
   AAVE_ORACLE_ABI,
 } from "../../protocols/aave/abi/aave.abis.js";
+import { ERC20_STRING_ABI, ERC20_BYTES32_ABI } from "../../abi/index.js";
+import { getTokenMetadata } from "../../helpers/tokenMetadata.js";
 
 export class AaveAdapter extends BaseProtocol {
   constructor({ provider, config }) {
@@ -34,7 +35,7 @@ export class AaveAdapter extends BaseProtocol {
   async getOracle() {
     if (!this.oracle) {
       const oracleAddress = await this.addressesProvider.getPriceOracle();
-      console.log("getOracle oracleAddress", oracleAddress);
+      //console.log("getOracle oracleAddress", oracleAddress);
       this.oracle = new Contract(oracleAddress, AAVE_ORACLE_ABI, this.provider);
       //this.baseCurrencyDecimals = await this.oracle.BASE_CURRENCY_DECIMALS();
     }
@@ -44,17 +45,14 @@ export class AaveAdapter extends BaseProtocol {
   async getAssets() {
     const pool = await this.getPool();
     const reserves = await pool.getReservesList();
-    const result = await Promise.all(
-      reserves.map(async (address) => {
-        const token = new Contract(address, ERC20_ABI, this.provider);
-        const [symbol, decimals] = await Promise.all([
-          token.symbol(),
-          token.decimals(),
-        ]);
-        return { address, symbol, decimals: Number(decimals) };
-      }),
+
+    const assets = await Promise.all(
+      reserves.map((address) =>
+        getTokenMetadata(address, this.provider).catch(() => null),
+      ),
     );
-    return result;
+    // ❗️отсекаем битые токены
+    return assets.filter(Boolean);
   }
 
   async getPrices(assets) {

@@ -2,13 +2,13 @@
 import { networksConfig } from "../../../config/networks.config.js";
 
 export const NETWORK_CONFIG = {
-  name: "arbitrum",
-  chainId: 42161,
-  RPC_URL: networksConfig.arbitrum.RPC_URL,
+  name: "etherium",
+  chainId: 1,
+  RPC_URL: networksConfig.etherium.RPC_URL,
 
   // Aave
   aave: {
     ADDRESSES_PROVIDER:
-      networksConfig.arbitrum.protocols.aave.ADDRESSES_PROVIDER,
+      networksConfig.ethereum.protocols.aave.ADDRESSES_PROVIDER,
   },
 };

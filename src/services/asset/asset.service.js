@@ -1,10 +1,14 @@
 //src/services/asset.service.js
 import { db } from "../../db/index.js";
-import { ASSETS_CACHE } from "../../cache/memory.cache.js";
+import {
+  getAssetsByNetworkCash,
+  setAssetsToCash,
+} from "../../cache/asset.cache.js";
 import { getAssets } from "../../blockchain/index.js";
 import { getEnabledNetworks } from "../network/network.service.js";
 
 export async function syncAssets() {
+  console.log("⏱ Asset sync started");
   const networks = await getEnabledNetworks();
 
   for (const network of Object.values(networks)) {
@@ -44,6 +48,7 @@ export async function getAssetByAddress(address) {
 
 //Получить все assets
 export async function getAllAssets() {
+  console.log("getAllAssets: ");
   return db.assets.getAll();
 }
 
@@ -53,17 +58,23 @@ export async function getAssetBySymbol(symbol) {
 }
 
 export async function loadAssetsToCache(network_id) {
+  console.log("!!!!!!!!!!!!!!!!loadAssetsToCache");
   const assets = await db.assets.getByNetwork(network_id);
-  ASSETS_CACHE[network_id] = {};
-  for (const asset of assets) {
-    ASSETS_CACHE[network_id][asset.address.toLowerCase()] = asset;
-  }
-  console.log(`✅ Loaded ${assets.length} assets into cache`);
+  setAssetsToCash(network_id, assets);
 }
 
 export async function getAssetsByNetwork(network_id) {
-  if (!ASSETS_CACHE[network_id]) {
-    await loadAssetsToCache(network_id);
-  }
-  return ASSETS_CACHE[network_id];
+  return getAssetsByNetworkCash(network_id);
+}
+
+export async function getAssetsByNetworks() {
+  const networks = Object.values(getEnabledNetworks());
+
+  const results = await Promise.all(
+    networks.map(async (network) => ({
+      name: network.name,
+      assets: await getAssetsByNetworkCash(network.id),
+    })),
+  );
+  return Object.fromEntries(results.map(({ name, assets }) => [name, assets]));
 }
