@@ -1,10 +1,23 @@
-import express from 'express';
-import { getAllAssets } from '../../services/asset/asset.service.js';
+//src/api/routes/assets.route.js
+import express from "express";
+import { getAssetsByNetworks } from "../../services/asset/asset.service.js";
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.json(getAllAssets());
+router.get("/", async (req, res) => {
+  console.log("API assets");
+  try {
+    const assets = await getAssetsByNetworks(); // ждём результат
+    console.warn("API assets: ", assets);
+    res.json(assets);
+  } catch (e) {
+    console.error("❌ Failed to get assets:", e);
+    res.status(500).json({ error: "Failed to get assets" });
+  }
+});
+
+router.get("/health", (req, res) => {
+  res.status(200).send("OK");
 });
 
 export default router;

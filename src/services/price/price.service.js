@@ -1,5 +1,5 @@
 //src/services/price.service.js
-import { PRICE_CACHE } from "../../cache/memory.cache.js";
+import { getPriceCache, setPriceToCash } from "../../cache/price.cache.js";
 import { db } from "../../db/index.js";
 import { getAssetsByNetwork } from "../asset/asset.service.js";
 import { getEnabledNetworks } from "../network/network.service.js";
@@ -17,7 +17,7 @@ export async function syncPrices() {
       //console.log("syncPrices price", price);
       const asset = assets[price.address];
       //console.log("syncPrices asset", asset);
-      savePriceIfChanged(network.id, asset, price.price);
+      savePriceIfChanged(network, asset, price.price);
     }
   }
 }
@@ -28,8 +28,9 @@ export async function syncPrices() {
 export async function getAssetPriceUSD(network_id, assetAddress) {
   const address = assetAddress.toLowerCase();
   // cache (address → price)
-  if (PRICE_CACHE[network_id][address] !== undefined) {
-    return PRICE_CACHE[network_id][address];
+  const dataPrice = getPriceCache(network_id, address);
+  if (!dataPrice && dataPrice.priceUSD != 0) {
+    return dataPrice.priceUSD;
   }
 
   const asset = await assetRepo.findByAddress(address);
@@ -37,23 +38,26 @@ export async function getAssetPriceUSD(network_id, assetAddress) {
 
   const price = (await priceRepo.getLastPriceByAssetAddress(address)) ?? 0;
 
-  PRICE_CACHE[network_id][address] = price;
+  setPriceToCash(network_id, address, price);
+
   return price;
 }
 
 /*
  * Сохраняем цену токена по адресу (если изменилась)
  */
-export async function savePriceIfChanged(network_id, asset, priceUsd) {
+export async function savePriceIfChanged(network, asset, priceUsd) {
   if (!asset?.address) {
     console.warn("⚠️ asset.address is missing", asset);
     return;
   }
-
-  ensureNetworkCache(network_id);
-
+  //console.log("savePriceIfChanged asset", asset);
   const address = asset.address.toLowerCase();
-  const lastPrice = PRICE_CACHE[network_id][address];
+  const lastPrice = 0;
+  const dataPrice = getPriceCache(network.id, address);
+  if (dataPrice && dataPrice.priceUSD) {
+    lastPrice = dataPrice.priceUSD;
+  }
 
   // если цена не изменилась — ничего не делаем
   if (lastPrice !== undefined && Math.abs(lastPrice - priceUsd) < 1e-8) {
@@ -61,15 +65,15 @@ export async function savePriceIfChanged(network_id, asset, priceUsd) {
   }
 
   try {
-    await db.prices.savePrice(network_id, asset.id, priceUsd);
-    PRICE_CACHE[network_id][address] = priceUsd;
+    await db.prices.savePrice(network.id, asset.id, priceUsd);
+    setPriceToCash(network.id, address, {
+      priceUsd: priceUsd,
+      symbol: asset.symbol,
+      chain_id: network.chain_id,
+      native_symbol: network.native_symbol,
+      chain_name: network.name,
+    });
   } catch (e) {
     console.error(`❌ Failed to save price for ${asset.id}:`, e);
-  }
-}
-
-function ensureNetworkCache(network_id) {
-  if (!PRICE_CACHE[network_id]) {
-    PRICE_CACHE[network_id] = {};
   }
 }

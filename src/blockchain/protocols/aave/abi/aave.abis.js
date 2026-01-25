@@ -36,8 +36,3 @@ export const AAVE_ORACLE_ABI = [
   "function getAssetPrice(address asset) view returns (uint256)",
   "function BASE_CURRENCY() view returns (address)",
 ];
-
-export const ERC20_ABI = [
-  "function symbol() view returns (string)",
-  "function decimals() view returns (uint8)",
-];
