@@ -5,8 +5,8 @@ import { startPriceSyncCron } from "./priceUpdater.cron.js";
 /**
  * 🚀 Запуск всех cron-задач
  */
-export function startCrons() {
+export async function startCrons() {
   console.log("🕒 Starting cron jobs...");
-  startAssetSyncCron();
-  startPriceSyncCron();
+  await startAssetSyncCron();
+  await startPriceSyncCron();
 }
