@@ -56,7 +56,7 @@ export function positionsCommand(bot) {
           return ctx.reply(`ℹ️ Нет активных позиций в Aave.`);
         }
 
-        messages.push(`💰 Net value: ${totals.netUsd.toFixed(2)}`);
+        messages.push(`💰 Aave value: ${totals.netUsd.toFixed(2)}`);
 
         if (supplies.length) {
           let text = `📈 Supplied (Total: ${totals.suppliedUsd.toFixed(2)} USD):\n`;

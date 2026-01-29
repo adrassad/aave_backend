@@ -11,7 +11,7 @@ import { getEnabledNetworks } from "../network/network.service.js";
 export async function syncAssets() {
   console.log("⏱ Asset sync started");
   const networks = await getEnabledNetworks();
-
+  //console.log("syncAssets networks: ", networks);
   for (const network of Object.values(networks)) {
     console.log(`🔗 Network: ${network.name}`);
 
@@ -75,7 +75,17 @@ export async function getAssetBySymbol(symbol) {
 export async function loadAssetsToCache(network_id) {
   //console.log("!!!!!!!!!!!!!!!!loadAssetsToCache");
   const assets = await db.assets.getByNetwork(network_id);
-  await setAssetsToCache(network_id, assets);
+  const assetsByAddress = {};
+  for (const asset of assets) {
+    assetsByAddress[asset.address.toLowerCase()] = {
+      id: asset.id,
+      network_id: asset.network_id,
+      address: asset.address,
+      symbol: asset.symbol,
+      decimals: asset.decimals,
+    };
+  }
+  await setAssetsToCache(network_id, assetsByAddress);
 }
 
 export async function getAssetsByNetwork(network_id) {

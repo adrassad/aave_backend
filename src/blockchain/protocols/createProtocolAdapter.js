@@ -1,17 +1,21 @@
+//src/blockchain/protocols/createProtocolAdapter.js
 import { protocolRegistry } from "./index.js";
 
 export function createProtocolAdapter({
-    protocolName,
-    provider,
-    protocolConfig
-}){
-    const Adapter = protocolRegistry[protocolName];
+  protocolName,
+  networkName,
+  provider,
+  protocolConfig,
+}) {
+  const factory = protocolRegistry[protocolName];
 
-    if (!Adapter) {
-        throw new Error(`Protocol ${protocolName} not supported`);
-    }
-    return new Adapter({
-        provider,
-        config: protocolConfig
-    })
+  if (!factory) {
+    throw new Error(`Protocol ${protocolName} not supported`);
+  }
+
+  return factory({
+    networkName,
+    provider,
+    config: protocolConfig,
+  });
 }

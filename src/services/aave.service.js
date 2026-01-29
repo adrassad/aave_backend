@@ -1,5 +1,5 @@
 // src/services/aave.service.js
-import { getAaveUserPositions } from "../blockchain/index.js";
+import { getUserPositions } from "../blockchain/index.js";
 import { getEnabledNetworks } from "./network/network.service.js";
 import { getAssetPriceUSD } from "./price/price.service.js";
 import { getAssetByAddress } from "./asset/asset.service.js";
@@ -23,9 +23,9 @@ export async function getWalletPositions(userId, walletAddress) {
 
   for (const network of Object.values(networks)) {
     // console.log("network: ", network);
-    //const { positions, healthFactor } = await getAaveUserPositions(
+    //const { positions, healthFactor } = await getUserPositions(
     const { positions = [], healthFactor = 0 } =
-      (await getAaveUserPositions(network.name, "aave", walletAddress)) || {};
+      (await getUserPositions(network.name, "aave", walletAddress)) || {};
     const supplies = [];
     const borrows = [];
     let totalSuppliedUsd = 0;

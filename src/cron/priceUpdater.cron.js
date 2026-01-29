@@ -21,6 +21,6 @@ export async function startPriceSyncCron() {
   }
 }
 
-startPriceSyncCron();
+await startPriceSyncCron();
 
 cron.schedule("*/5 * * * *", startPriceSyncCron);

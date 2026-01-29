@@ -4,10 +4,8 @@
 
 export function createNetworkRepository(db) {
   return {
-    async getEnabled() {
-      const res = await db.query(
-        `SELECT * FROM networks WHERE enabled = true`
-      );
+    async getNetworks() {
+      const res = await db.query(`SELECT * FROM networks`);
       return res.rows;
     },
 
@@ -15,11 +13,20 @@ export function createNetworkRepository(db) {
       await db.query(
         `
         INSERT INTO networks (name, chain_id, native_symbol, enabled)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (name) DO NOTHING
+          VALUES ($1, $2, $3, $4)
+          ON CONFLICT (name) DO UPDATE
+          SET
+            chain_id = EXCLUDED.chain_id,
+            native_symbol = EXCLUDED.native_symbol,
+            enabled = EXCLUDED.enabled
         `,
-        [network.name, network.chain_id, network.native_symbol, network.enabled]
+        [
+          network.name,
+          network.chain_id,
+          network.native_symbol,
+          network.enabled,
+        ],
       );
-    }
+    },
   };
 }

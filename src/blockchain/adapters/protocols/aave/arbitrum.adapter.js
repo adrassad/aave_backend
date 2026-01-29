@@ -1,17 +1,16 @@
-//src/blockchain/adapters/protocols/aave.adapter.js
-import { Contract } from "ethers";
-import { BaseProtocol } from "../../protocols/base.protocol.js";
+// src/blockchain/adapters/protocols/aave/arbitrum.adapter.js
+import { Contract, getAddress } from "ethers";
+import { AaveBaseAdapter } from "../base.protocol.js";
 import {
   ADDRESSES_PROVIDER_ABI,
   AAVE_POOL_ABI,
   AAVE_ORACLE_ABI,
   AAVE_DATA_PROVIDER_ABI,
-} from "../../protocols/aave/abi/aave.abis.js";
-import { ERC20_STRING_ABI, ERC20_BYTES32_ABI } from "../../abi/index.js";
-import { getTokenMetadata } from "../../helpers/tokenMetadata.js";
+} from "../../../protocols/aave/abi/aave.abis.js";
+import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
 import { isAddress } from "ethers";
 
-export class AaveAdapter extends BaseProtocol {
+export class AaveArbitrumAdapter extends AaveBaseAdapter {
   constructor({ provider, config }) {
     super({ provider, config });
 
@@ -19,8 +18,10 @@ export class AaveAdapter extends BaseProtocol {
       throw new Error("Aave ADDRESSES_PROVIDER not configured");
     }
 
+    const correctAddress = getAddress(config.ADDRESSES_PROVIDER);
+    console.log("correctAddress: ", correctAddress);
     this.addressesProvider = new Contract(
-      config.ADDRESSES_PROVIDER,
+      correctAddress,
       ADDRESSES_PROVIDER_ABI,
       provider,
     );
@@ -70,6 +71,7 @@ export class AaveAdapter extends BaseProtocol {
   }
 
   async getPrices(assets) {
+    console.log("ARBITRUM getPrices: ");
     const ORACLE_DECIMALS = 8;
     const oracle = await this.getOracle();
 

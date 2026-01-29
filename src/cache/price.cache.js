@@ -10,11 +10,10 @@ export async function getPriceCache(network_id, address) {
   return prices[address.toLowerCase()] ?? 0;
 }
 
-export async function setPriceToCache(network_id, address, dataPrice) {
+export async function setPriceToCache(network_id, prices) {
   const key = `prices:${network_id}`;
   const data = await redis.get(key);
-  const prices = data ? JSON.parse(data) : {};
-  prices[address.toLowerCase()] = dataPrice;
+  //const prices = data ? JSON.parse(data) : {};
   await redis.set(key, JSON.stringify(prices), "EX", 60 * 60); //1 час TTL
   // console.log(
   //   `✅ Cached ${Object.keys(prices).length} prices for ${network_id}`,
@@ -34,6 +33,7 @@ export async function getPricesByAddress(address) {
 
   const keys = await redis.keys("prices:*");
   for (const key of keys) {
+    console.log("getPricesByAddress key: ", key);
     const data = await redis.get(key);
     if (!data) continue;
 

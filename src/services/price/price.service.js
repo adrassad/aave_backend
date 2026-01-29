@@ -6,6 +6,7 @@ import { getEnabledNetworks } from "../network/network.service.js";
 import { getPrices } from "../../blockchain/index.js";
 
 export async function syncPrices() {
+  await loadPricesToCache();
   const networks = await getEnabledNetworks();
   for (const network of Object.values(networks)) {
     console.log(`🔗 Network: ${network.id}`);
@@ -25,11 +26,25 @@ export async function syncPrices() {
         continue;
       }
       //console.log("!!!!!!!!!!!!!!!savePriceIfChanged!!!!!!!!!!!!!!!!!!!");
+      console.log("asset: ", asset);
       await savePriceIfChanged(network, asset, price.price);
     }
+    await loadPricesToCache(network.id);
   }
 }
 
+export async function loadPricesToCache(network_id) {
+  //console.log("!!!!!!!!!!!!!!!!loadAssetsToCache");
+  const pricesDb = await db.prices.getLastPriceByNetwork(network_id);
+  const prices = {};
+  for (const price of pricesDb) {
+    prices[price.address] = {
+      price_usd: price.price_usd,
+      symbol: price.symbol,
+    };
+  }
+  await setPriceToCache(network_id, prices);
+}
 /**
  * Цена 1 токена в USD по адресу
  */
@@ -55,7 +70,7 @@ export async function getAssetPriceUSD(network_id, assetAddress) {
  * Сохраняем цену токена по адресу (если изменилась)
  */
 export async function savePriceIfChanged(network, asset, priceUsd) {
-  if (!asset?.address) {
+  if (!asset?.address || !asset?.id) {
     // console.warn(
     //   "⚠️ asset.address is missing asset, network, priceUsd:",
     //   asset,
@@ -79,13 +94,6 @@ export async function savePriceIfChanged(network, asset, priceUsd) {
 
   try {
     await db.prices.savePrice(network.id, asset.id, priceUsd);
-    await setPriceToCache(network.id, address.toLowerCase(), {
-      priceUsd: priceUsd,
-      symbol: asset.symbol,
-      chain_id: network.chain_id,
-      native_symbol: network.native_symbol,
-      chain_name: network.name,
-    });
   } catch (e) {
     console.error(`❌ Failed to save price for ${asset.id}:`, e);
   }

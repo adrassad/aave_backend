@@ -22,9 +22,9 @@ export async function setNetworkToCashe(dataNetwork) {
 export async function getEnabledNetworksCache() {
   const keys = await redis.keys("networks:*"); // получаем все ключи сетей
   const networks = {};
-
   for (const key of keys) {
     const data = await redis.get(key);
+    //console.log("getEnabledNetworksCache data: ", data);
     if (data) {
       const network = JSON.parse(data);
       if (network.enabled) {
