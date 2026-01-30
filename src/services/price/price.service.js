@@ -9,7 +9,7 @@ export async function syncPrices() {
   await loadPricesToCache();
   const networks = await getEnabledNetworks();
   for (const network of Object.values(networks)) {
-    console.log(`🔗 Network: ${network.id}`);
+    console.log(`🔗 Network: ${network.name} `, network.id);
     const assets = await getAddressAssetsByNetwork(network.id);
     //console.log("syncPrices assets", Object.values(assets));
     const prices = await getPrices(network.name, "aave", Object.values(assets));
@@ -26,7 +26,7 @@ export async function syncPrices() {
         continue;
       }
       //console.log("!!!!!!!!!!!!!!!savePriceIfChanged!!!!!!!!!!!!!!!!!!!");
-      console.log("asset: ", asset);
+      //console.log("asset: ", asset);
       await savePriceIfChanged(network, asset, price.price);
     }
     await loadPricesToCache(network.id);
