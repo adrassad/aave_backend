@@ -13,7 +13,7 @@ export async function syncAssets() {
   const networks = await getEnabledNetworks();
   //console.log("syncAssets networks: ", networks);
   for (const network of Object.values(networks)) {
-    console.log(`🔗 Network: ${network.name}`);
+    console.log(`🔗 Network: ${network.name} `, network.id);
 
     // 1️⃣ Получаем assets из blockchain
     const assets = await getAssets(network.name, "aave");

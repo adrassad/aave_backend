@@ -19,7 +19,7 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
     }
 
     const correctAddress = getAddress(config.ADDRESSES_PROVIDER);
-    console.log("correctAddress: ", correctAddress);
+    //console.log("correctAddress: ", correctAddress);
     this.addressesProvider = new Contract(
       correctAddress,
       ADDRESSES_PROVIDER_ABI,
@@ -71,7 +71,7 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
   }
 
   async getPrices(assets) {
-    console.log("ARBITRUM getPrices: ");
+    //console.log("ARBITRUM getPrices: ");
     const ORACLE_DECIMALS = 8;
     const oracle = await this.getOracle();
 
