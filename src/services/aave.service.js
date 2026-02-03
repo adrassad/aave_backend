@@ -40,11 +40,11 @@ export async function getWalletPositions(userId, walletAddress) {
       const { decimals, symbol, address } = asset;
       const price_usd = await getAssetPriceUSD(network.id, address);
 
-      console.log("address: ", address);
-      console.log("addsymbolress: ", symbol);
-      console.log("decimals: ", decimals);
-      console.log("price_usd: ", price_usd);
-      console.log("position: ", position);
+      // console.log("address: ", address);
+      // console.log("addsymbolress: ", symbol);
+      // console.log("decimals: ", decimals);
+      // console.log("price_usd: ", price_usd);
+      // console.log("position: ", position);
 
       if (position.aTokenBalance > 0n) {
         const amount = Number(position.aTokenBalance) / 10 ** decimals;

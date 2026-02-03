@@ -52,7 +52,7 @@ export class AaveAvalancheAdapter extends AaveBaseAdapter {
 
     if (!this.pool) {
       const poolAddress = await this.poolAddressesProvider.getPool();
-      console.log("poolAddress: ", poolAddress);
+      // console.log("poolAddress: ", poolAddress);
       this.pool = new Contract(poolAddress, AAVE_POOL_V3_ABI, this.provider);
     }
   }

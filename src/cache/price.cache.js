@@ -33,7 +33,7 @@ export async function getPricesByAddress(address) {
 
   const keys = await redis.keys("prices:*");
   for (const key of keys) {
-    console.log("getPricesByAddress key: ", key);
+    // console.log("getPricesByAddress key: ", key);
     const data = await redis.get(key);
     if (!data) continue;
 
