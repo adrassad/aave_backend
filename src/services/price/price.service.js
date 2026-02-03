@@ -42,6 +42,7 @@ export async function loadPricesToCache(network_id) {
     prices[price.address.toLowerCase()] = {
       price_usd: Number(price.price_usd),
       symbol: price.symbol,
+      timestamp: price.timestamp,
     };
   }
   await setPriceToCache(network_id, prices);

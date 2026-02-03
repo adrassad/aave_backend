@@ -27,51 +27,31 @@ export async function getPricesByNetworkCash(network_id) {
   return JSON.parse(data);
 }
 
-export async function getPricesByAddress(address) {
-  const normalizedAddress = address.toLowerCase();
-  const result = [];
-
-  const keys = await redis.keys("prices:*");
-  for (const key of keys) {
-    // console.log("getPricesByAddress key: ", key);
-    const data = await redis.get(key);
-    if (!data) continue;
-
-    const prices = JSON.parse(data);
-    if (prices[normalizedAddress]) {
-      const networkId = key.split(":")[1];
-      result.push({
-        networkId,
-        address: normalizedAddress,
-        dataPrice: prices[normalizedAddress],
-      });
-    }
-  }
-
-  return result;
-}
-export async function getPricesBySymbol(symbol) {
+export async function getPricesBySymbol(networks, symbol) {
   const normalizedSymbol = symbol.toUpperCase();
-  const result = [];
 
-  const keys = await redis.keys("prices:*");
-  for (const key of keys) {
-    const data = await redis.get(key);
-    if (!data) continue;
+  const entries = await Promise.all(
+    Object.keys(networks).map(async (networkId) => {
+      try {
+        const raw = await redis.get(`prices:${networkId}`);
+        if (!raw) return [];
 
-    const networkId = key.split(":")[1];
-    const prices = JSON.parse(data);
+        const prices = JSON.parse(raw);
 
-    for (const [address, dataPrice] of Object.entries(prices)) {
-      if (dataPrice?.symbol?.toUpperCase() === normalizedSymbol) {
-        result.push({
-          networkId,
-          address,
-          ...dataPrice,
-        });
+        return Object.entries(prices)
+          .filter(
+            ([, p]) => p?.symbol && p.symbol.toUpperCase() === normalizedSymbol,
+          )
+          .map(([address, p]) => ({
+            networkId,
+            address,
+            ...p,
+          }));
+      } catch {
+        return [];
       }
-    }
-  }
-
-  return result;
+    }),
+  );
+  //console.log("getPricesBySymbol entries", entries);
+  return entries.flat();
 }
