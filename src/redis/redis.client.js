@@ -6,19 +6,27 @@ export const redis = new Redis({
   port: process.env.REDIS_PORT ?? 6379,
   lazyConnect: true, // 🔥 важно
   maxRetriesPerRequest: 1, // не блокировать event loop
-  enableOfflineQueue: true,
+  enableOfflineQueue: true, // очередь включена
 });
 
+// Подписка на события
 redis.on("connect", () => {
   console.log("🟢 Redis connected");
 });
 
 redis.on("error", (err) => {
   console.error("🔴 Redis error:", err.message);
-  // ❗ НЕ throw
-  // ❗ НЕ process.exit
 });
 
 redis.on("close", () => {
   console.warn("🟠 Redis connection closed");
 });
+
+// Функция для подключения Redis при старте приложения
+export async function connectRedis() {
+  try {
+    await redis.connect(); // 🔑 lazyConnect требует явного вызова
+  } catch (err) {
+    console.error("⚠️ Redis connect failed:", err.message);
+  }
+}
