@@ -16,7 +16,10 @@ export async function getEnabledNetworksCache() {
     if (!data) return {};
     return JSON.parse(data);
   } catch (err) {
-    console.warn("⚠️ Redis unavailable, skip enabled networks cache");
+    console.warn(
+      "⚠️ Redis unavailable, skip enabled networks cache",
+      err.message,
+    );
     return []; // 🔥 graceful fallback
   }
 }

@@ -6,7 +6,7 @@ export const redis = new Redis({
   port: process.env.REDIS_PORT ?? 6379,
   lazyConnect: true, // 🔥 важно
   maxRetriesPerRequest: 1, // не блокировать event loop
-  enableOfflineQueue: false,
+  enableOfflineQueue: true,
 });
 
 redis.on("connect", () => {
