@@ -1,5 +1,9 @@
 //src/services/price.service.js
-import { getPriceCache, setPriceToCache } from "../../cache/price.cache.js";
+import {
+  getPricesBySymbolCache,
+  getPriceCache,
+  setPriceToCache,
+} from "../../cache/price.cache.js";
 import { db } from "../../db/index.js";
 import { getAddressAssetsByNetwork } from "../asset/asset.service.js";
 import { getEnabledNetworks } from "../network/network.service.js";
