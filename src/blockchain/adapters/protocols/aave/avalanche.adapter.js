@@ -1,13 +1,11 @@
 import { Contract, getAddress, isAddress } from "ethers";
 import { AaveBaseAdapter } from "../base.protocol.js";
 
-import {
-  AAVE_POOL_V3_ABI,
-  AAVE_ORACLE_ABI,
-  POOL_ADDRESSES_PROVIDER_V3_ABI,
-  UI_POOL_DATA_PROVIDER_V3_ABI,
-} from "../../../protocols/aave/abi/aave.abis.js";
-
+import { Aave } from "../../../abi/index.js";
+import { AAVE_ORACLE_ABI } from "../../../abi/aave/oracle.abi.js";
+import { UI_POOL_DATA_PROVIDER_V3_ABI } from "../../../abi/aave/uiPoolDataProviderV3.abi.js";
+import { AAVE_POOL_V3_ABI } from "../../../abi/aave/aavePoolV3.abi.js";
+import { POOL_ADDRESSES_PROVIDER_V3_ABI } from "../../../abi/aave/poolAddressesProviderV3.abi.js";
 import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
 
 const STATIC = {

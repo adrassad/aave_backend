@@ -18,14 +18,16 @@ export async function getWalletPositions(userId, walletAddress) {
   const networksPositions = {};
   // Получаем данные Aave через фасад
 
-  console.log("⏱ Asset sync started");
+  console.log("getWalletPositions");
   const networks = await getEnabledNetworks();
 
+  console.log("getWalletPositions");
   for (const network of Object.values(networks)) {
     //console.log("network: ", network);
     //const { positions, healthFactor } = await getUserPositions(
-    const { positions = [], healthFactor = 0 } =
-      (await getUserPositions(network.name, "aave", walletAddress)) || {};
+    let result = await getUserPositions(network.name, "aave", walletAddress);
+    const positions = (await result.positions) || [];
+    const healthFactor = result.healthFactor || 0;
     const supplies = [];
     const borrows = [];
     let totalSuppliedUsd = 0;

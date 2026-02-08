@@ -1,11 +1,9 @@
 // src/blockchain/adapters/protocols/aave/ethereum.adapter.js
 import { Contract, getAddress } from "ethers";
-import {
-  ADDRESSES_PROVIDER_ABI,
-  AAVE_POOL_ABI,
-  AAVE_ORACLE_ABI,
-  AAVE_DATA_PROVIDER_ABI,
-} from "../../../protocols/aave/abi/aave.abis.js";
+import { AAVE_DATA_PROVIDER_ABI } from "../../../abi/aave/aaveDataProvider.abi.js";
+import { AAVE_POOL_V3_ABI } from "../../../abi/aave/aavePoolV3.abi.js";
+import { POOL_ADDRESSES_PROVIDER_V3_ABI } from "../../../abi/aave/poolAddressesProviderV3.abi.js";
+import { AAVE_ORACLE_ABI } from "../../../abi/aave/oracle.abi.js";
 import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
 import { isAddress } from "ethers";
 import { AaveBaseAdapter } from "../base.protocol.js";
@@ -22,7 +20,7 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
     //console.log("correctAddress: ", correctAddress);
     this.addressesProvider = new Contract(
       correctAddress,
-      ADDRESSES_PROVIDER_ABI,
+      POOL_ADDRESSES_PROVIDER_V3_ABI,
       provider,
     );
   }
@@ -30,7 +28,7 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
   async getPool() {
     if (!this.pool) {
       const poolAddress = await this.addressesProvider.getPool();
-      this.pool = new Contract(poolAddress, AAVE_POOL_ABI, this.provider);
+      this.pool = new Contract(poolAddress, AAVE_POOL_V3_ABI, this.provider);
     }
     return this.pool;
   }

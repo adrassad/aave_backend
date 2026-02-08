@@ -69,6 +69,12 @@ export async function getAssetPriceUSD(network_id, assetAddress) {
   return 0;
 }
 
+export async function getAssetPrice(network_id, assetAddress) {
+  const address = assetAddress.toLowerCase();
+  const dataPrice = await getPriceCache(network_id, address);
+  return dataPrice;
+}
+
 /*
  * Сохраняем цену токена по адресу (если изменилась)
  */
@@ -100,8 +106,4 @@ export async function savePriceIfChanged(network, asset, priceUsd) {
   } catch (e) {
     console.error(`❌ Failed to save price for ${asset.id}:`, e);
   }
-}
-
-export async function getPricesBySymbol(networks, symbol) {
-  return await getPricesBySymbolCache(networks, symbol);
 }

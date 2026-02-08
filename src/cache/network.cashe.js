@@ -1,25 +1,63 @@
 import { redis } from "../redis/redis.client.js";
 
+const TTL = 60 * 60;
+
 export async function setNetworksToCashe(networks) {
-  const key = "enabled_networks";
-  await redis.set(
-    key,
-    JSON.stringify(networks),
-    "EX",
-    60 * 60, // 1 час TTL
-  );
+  if (redis.status !== "ready") return;
+  try {
+    const pipeline = redis.pipeline();
+    for (const network of Object.values(networks)) {
+      const key = `enabled_networks:${network.id}`;
+      pipeline.set(key, JSON.stringify(network), "EX", TTL);
+      pipeline.sadd("enabled_networks:list", network.id);
+    }
+    pipeline.expire("enabled_networks:list", TTL);
+    await pipeline.exec();
+  } catch (err) {
+    console.warn("⚠️ Redis setNetworksToCache failed:", err.message);
+  }
+}
+
+export async function getNetworkCache(networkId) {
+  if (redis.status !== "ready") return {};
+
+  try {
+    const key = `enabled_networks:${networkId}`;
+    const data = await redis.hgetall(key);
+
+    if (!data || Object.keys(data).length === 0) {
+      return {};
+    }
+
+    if (!data) return {};
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("❌ getAssetsByNetworkCache failed:", err.message);
+    return {};
+  }
 }
 
 export async function getEnabledNetworksCache() {
+  if (redis.status !== "ready") return {};
+
   try {
-    const data = await redis.get("enabled_networks");
-    if (!data) return {};
-    return JSON.parse(data);
+    const ids = await redis.smembers("enabled_networks:list");
+    if (!ids?.length) return {};
+
+    const keys = ids.map((id) => `enabled_networks:${id}`);
+    const values = await redis.mget(...keys);
+
+    return values.reduce((acc, raw, index) => {
+      if (!raw) return acc;
+      const network = JSON.parse(raw);
+      acc[ids[index]] = network;
+      return acc;
+    }, {});
   } catch (err) {
     console.warn(
       "⚠️ Redis unavailable, skip enabled networks cache",
       err.message,
     );
-    return []; // 🔥 graceful fallback
+    return {};
   }
 }
