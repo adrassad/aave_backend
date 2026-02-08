@@ -1,57 +1,116 @@
-//src/cache/price.cache.js
-// network_id -> address -> dataPrice
+// src/cache/price.cache.js
 import { redis } from "../redis/redis.client.js";
 
-export async function getPriceCache(network_id, address) {
-  const key = `prices:${network_id}`;
-  const data = await redis.get(key);
-  if (!data) return 0;
-  const prices = JSON.parse(data);
-  return prices[address.toLowerCase()] ?? 0;
+const PRICE_TTL = 60 * 60; // 1 час
+
+function priceKey(networkId, address) {
+  return `price:${networkId}:${address.toLowerCase()}`;
 }
 
-export async function setPriceToCache(network_id, prices) {
-  const key = `prices:${network_id}`;
-  const data = await redis.get(key);
-  //const prices = data ? JSON.parse(data) : {};
-  await redis.set(key, JSON.stringify(prices), "EX", 60 * 60); //1 час TTL
-  // console.log(
-  //   `✅ Cached ${Object.keys(prices).length} prices for ${network_id}`,
-  // );
+/**
+ * Получить цену по сети и адресу
+ */
+export async function getPriceCache(networkId, address) {
+  if (redis.status !== "ready") return 0;
+
+  try {
+    const data = await redis.get(priceKey(networkId, address));
+    if (!data) return 0;
+    return JSON.parse(data);
+  } catch (err) {
+    console.warn("⚠️ Redis getPriceCache failed:", err.message);
+    return 0;
+  }
 }
 
-export async function getPricesByNetworkCash(network_id) {
-  const key = `prices:${network_id}`;
-  const data = await redis.get(key);
-  if (!data) return {};
-  return JSON.parse(data);
+/**
+ * Сохранить цены (address -> dataPrice)
+ */
+export async function setPriceToCache(networkId, prices) {
+  if (redis.status !== "ready") return;
+
+  try {
+    const pipeline = redis.pipeline();
+
+    for (const [address, price] of Object.entries(prices)) {
+      pipeline.set(
+        priceKey(networkId, address),
+        JSON.stringify(price),
+        "EX",
+        PRICE_TTL,
+      );
+    }
+
+    await pipeline.exec();
+
+    console.log(
+      `✅ Cached ${Object.keys(prices).length} prices for ${networkId}`,
+    );
+  } catch (err) {
+    console.warn("⚠️ Redis setPriceToCache failed:", err.message);
+  }
 }
 
-export async function getPricesBySymbolCache(networks, symbol) {
-  const normalizedSymbol = symbol.toUpperCase();
+/**
+ * Получить все цены по сети
+ * ⚠️ Тяжёлая операция — использовать редко (admin / cron)
+ */
+export async function getPricesByNetworkCache(networkId) {
+  if (redis.status !== "ready") return {};
 
-  const entries = await Promise.all(
-    Object.keys(networks).map(async (networkId) => {
-      try {
-        const raw = await redis.get(`prices:${networkId}`);
-        if (!raw) return [];
+  try {
+    const keys = await redis.keys(`price:${networkId}:*`);
+    if (!keys.length) return {};
 
-        const prices = JSON.parse(raw);
+    const values = await redis.mget(keys);
 
-        return Object.entries(prices)
-          .filter(
-            ([, p]) => p?.symbol && p.symbol.toUpperCase() === normalizedSymbol,
-          )
-          .map(([address, p]) => ({
-            networkId,
-            address,
-            ...p,
-          }));
-      } catch {
-        return [];
+    const result = {};
+    keys.forEach((key, i) => {
+      const address = key.split(":")[2];
+      if (values[i]) {
+        result[address] = JSON.parse(values[i]);
       }
-    }),
-  );
-  //console.log("getPricesBySymbol entries", entries);
-  return entries.flat();
+    });
+
+    return result;
+  } catch (err) {
+    console.warn("⚠️ Redis getPricesByNetworkCache failed:", err.message);
+    return {};
+  }
+}
+
+/**
+ * Найти цены по символу (через Redis)
+ */
+export async function getPricesBySymbolCache(networks, symbol) {
+  if (redis.status !== "ready") return [];
+
+  const normalizedSymbol = symbol.toUpperCase();
+  const results = [];
+
+  for (const networkId of Object.keys(networks)) {
+    try {
+      const keys = await redis.keys(`price:${networkId}:*`);
+      if (!keys.length) continue;
+
+      const values = await redis.mget(keys);
+
+      keys.forEach((key, i) => {
+        if (!values[i]) return;
+
+        const price = JSON.parse(values[i]);
+        if (price?.symbol && price.symbol.toUpperCase() === normalizedSymbol) {
+          results.push({
+            networkId,
+            address: key.split(":")[2],
+            ...price,
+          });
+        }
+      });
+    } catch {
+      continue;
+    }
+  }
+
+  return results;
 }

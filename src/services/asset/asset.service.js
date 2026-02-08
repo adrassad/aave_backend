@@ -67,9 +67,8 @@ export async function getAllAssets() {
   return await db.assets.getAll();
 }
 
-//Получить перечень assets по symbol
-export async function getAssetBySymbol(symbol) {
-  return await db.assets.findAllBySymbol(symbol);
+export async function getAsset(networkId, addressOrSymbol) {
+  return getAssetCache(networkId, addressOrSymbol);
 }
 
 export async function loadAssetsToCache(network_id) {

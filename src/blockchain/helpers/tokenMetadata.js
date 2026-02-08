@@ -1,6 +1,6 @@
 // src/blockchain/helpers/tokenMetadata.js
 import { Contract, ethers } from "ethers";
-import { ERC20_STRING_ABI, ERC20_BYTES32_ABI } from "../abi/index.js";
+import { ERC20 } from "../abi/index.js";
 
 export async function getTokenMetadata(address, provider) {
   let symbol;
@@ -8,13 +8,13 @@ export async function getTokenMetadata(address, provider) {
 
   // symbol
   try {
-    const erc20 = new Contract(address, ERC20_STRING_ABI, provider);
+    const erc20 = new Contract(address, ERC20.ERC20_STRING_ABI, provider);
     symbol = await erc20.symbol();
     decimals = Number(await erc20.decimals());
   } catch {
     // fallback: bytes32
     try {
-      const erc20b32 = new Contract(address, ERC20_BYTES32_ABI, provider);
+      const erc20b32 = new Contract(address, ERC20.ERC20_BYTES32_ABI, provider);
       const rawSymbol = await erc20b32.symbol();
       symbol = ethers.decodeBytes32String(rawSymbol);
       decimals = Number(await erc20b32.decimals());
