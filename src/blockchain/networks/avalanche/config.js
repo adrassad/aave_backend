@@ -1,4 +1,4 @@
-// src/blockchain/networks/arbitrum/config.js
+// src/blockchain/networks/avalanche/config.js
 import { networksConfig } from "../../../config/networks.config.js";
 
 export const NETWORK_CONFIG = {

@@ -18,16 +18,28 @@ export async function getWalletPositions(userId, walletAddress) {
   const networksPositions = {};
   // Получаем данные Aave через фасад
 
-  console.log("getWalletPositions");
+  //console.log("getWalletPositions");
   const networks = await getEnabledNetworks();
 
-  console.log("getWalletPositions");
+  //console.log("getWalletPositions", networks);
   for (const network of Object.values(networks)) {
     //console.log("network: ", network);
     //const { positions, healthFactor } = await getUserPositions(
     let result = await getUserPositions(network.name, "aave", walletAddress);
     const positions = (await result.positions) || [];
     const healthFactor = result.healthFactor || 0;
+    // console.log(
+    //   "getUserPositions positions (" + network.name + ")",
+    //   positions,
+    //   healthFactor,
+    // );
+    if (result.error) {
+      networksPositions[network.name] = {
+        error: result.error,
+        healthFactor,
+      };
+      continue;
+    }
     const supplies = [];
     const borrows = [];
     let totalSuppliedUsd = 0;
@@ -41,12 +53,6 @@ export async function getWalletPositions(userId, walletAddress) {
       if (!asset) continue;
       const { decimals, symbol, address } = asset;
       const price_usd = await getAssetPriceUSD(network.id, address);
-
-      // console.log("address: ", address);
-      // console.log("addsymbolress: ", symbol);
-      // console.log("decimals: ", decimals);
-      // console.log("price_usd: ", price_usd);
-      // console.log("position: ", position);
 
       if (position.aTokenBalance > 0n) {
         const amount = Number(position.aTokenBalance) / 10 ** decimals;
