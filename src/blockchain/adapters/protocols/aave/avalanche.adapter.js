@@ -3,7 +3,7 @@ import { AaveBaseAdapter } from "../base.protocol.js";
 
 import { Aave } from "../../../abi/index.js";
 import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
-import e from "cors";
+import { formatHealthFactor } from "../../../helpers/healthFactor.js";
 
 export const RAY = 10n ** 27n;
 export class AaveAvalancheAdapter extends AaveBaseAdapter {
@@ -27,7 +27,9 @@ export class AaveAvalancheAdapter extends AaveBaseAdapter {
     if (Number(chainId) !== 43114) {
       throw new Error("Not Avalanche RPC");
     }
+  }
 
+  async getPool() {
     if (!this.pool) {
       const poolAddress = await this.poolAddressesProvider.getPool();
       //console.log("AVALANCHE poolAddress: ", poolAddress);
@@ -37,12 +39,13 @@ export class AaveAvalancheAdapter extends AaveBaseAdapter {
         this.provider,
       );
     }
+    return this.pool;
   }
-
   async getAssets() {
     await this.ensureAvalanche();
 
-    const reserves = await this.pool.getReservesList();
+    const pool = await this.getPool();
+    const reserves = await pool.getReservesList();
 
     const assets = await Promise.all(
       reserves.map((address) =>
@@ -84,12 +87,24 @@ export class AaveAvalancheAdapter extends AaveBaseAdapter {
     return prices;
   }
 
+  async getHealthFactor(userAddress) {
+    try {
+      const pool = await this.getPool();
+      const data = await pool.getUserAccountData(userAddress);
+
+      return formatHealthFactor(data.healthFactor);
+    } catch (e) {
+      console.warn("⚠️ getHealthFactor failed:", e.message);
+      return 0;
+    }
+  }
+
   async getUserPositions(userAddress) {
     await this.ensureAvalanche();
     let positions = [];
 
     // Получаем healthFactor напрямую
-    const { healthFactor } = await this.pool.getUserAccountData(userAddress);
+    const healthFactor = await this.getHealthFactor(userAddress);
 
     try {
       const uiDataProvider = new Contract(
@@ -149,13 +164,13 @@ export class AaveAvalancheAdapter extends AaveBaseAdapter {
     } catch (e) {
       return {
         positions: [],
-        healthFactor: 0n,
+        healthFactor: healthFactor,
         error: e.message,
       };
     }
     return {
       positions,
-      healthFactor: Number(healthFactor ?? 0n) / 1e18,
+      healthFactor: healthFactor,
       error: null,
     };
   }

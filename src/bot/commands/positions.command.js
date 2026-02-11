@@ -52,10 +52,12 @@ export function positionsCommand(bot) {
       for (const [networkName, data] of Object.entries(networksPositions)) {
         const { supplies, borrows, totals, healthFactor, error } = data;
 
+        console.log("healthFactor: ", healthFactor);
+
         await ctx.reply(`🔗 Network: ${networkName}`);
         if (error) {
           ctx.reply(`error: ${error}`);
-          ctx.reply(`🛡 Health Factor: ${healthFactor.toFixed(3)}`);
+          ctx.reply(`🛡 Health Factor: ${healthFactor}`);
           continue;
         }
 
@@ -85,7 +87,7 @@ export function positionsCommand(bot) {
             messages.push(text);
           }
 
-          messages.push(`🛡 Health Factor: ${healthFactor.toFixed(3)}`);
+          messages.push(`🛡 Health Factor: ${healthFactor}`);
 
           // Отправляем все сообщения
           for (const msg of messages) {

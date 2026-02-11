@@ -3,6 +3,7 @@ import { Contract, getAddress, isAddress } from "ethers";
 import { AaveBaseAdapter } from "../base.protocol.js";
 import { Aave } from "../../../abi/index.js";
 import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
+import { formatHealthFactor } from "../../../helpers/healthFactor.js";
 
 export class AaveArbitrumAdapter extends AaveBaseAdapter {
   constructor({ provider, config }) {
@@ -113,8 +114,20 @@ export class AaveArbitrumAdapter extends AaveBaseAdapter {
     return prices;
   }
 
+  async getHealthFactor(userAddress) {
+    try {
+      const pool = await this.getPool();
+      const { healthFactor } = await pool.getUserAccountData(userAddress);
+      return formatHealthFactor(healthFactor);
+    } catch (e) {
+      console.warn("⚠️ getHealthFactor failed:", e.message);
+      return "0.0000";
+    }
+  }
+
   async getUserPositions(userAddress) {
-    const pool = await this.getPool();
+    const healthFactor = await this.getHealthFactor(userAddress);
+    console.log("healthFactor: ", healthFactor);
 
     try {
       const uiAddress = getAddress(this.config.DATA_PROVIDER);
@@ -131,18 +144,16 @@ export class AaveArbitrumAdapter extends AaveBaseAdapter {
 
       const positions = parseUserPositions(userReserves);
 
-      // 🔹 healthFactor берём из Pool
-      const { healthFactor } = await pool.getUserAccountData(userAddress);
       //positions: console.log("positions: ", positions);
       return {
         positions,
-        healthFactor: Number(healthFactor) / 1e18,
+        healthFactor: healthFactor,
         error: null,
       };
     } catch (e) {
       return {
         positions: [],
-        healthFactor: 0,
+        healthFactor: healthFactor,
         error: e.message,
       };
     }
