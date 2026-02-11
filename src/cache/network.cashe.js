@@ -29,6 +29,7 @@ export async function getNetworkCache(networkId) {
       return {};
     }
 
+    console.log("getNetworkCache data: ", data);
     if (!data) return {};
     return JSON.parse(data);
   } catch (err) {
@@ -48,9 +49,12 @@ export async function getEnabledNetworksCache() {
     const values = await redis.mget(...keys);
 
     return values.reduce((acc, raw, index) => {
+      //console.log("raw: ", raw);
       if (!raw) return acc;
       const network = JSON.parse(raw);
+      if (network.enabled == false) return acc;
       acc[ids[index]] = network;
+      //console.log("acc: ", acc);
       return acc;
     }, {});
   } catch (err) {

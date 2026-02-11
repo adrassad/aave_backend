@@ -1,12 +1,8 @@
-// src/blockchain/adapters/protocols/aave/ethereum.adapter.js
-import { Contract, getAddress } from "ethers";
-import { AAVE_DATA_PROVIDER_ABI } from "../../../abi/aave/aaveDataProvider.abi.js";
-import { AAVE_POOL_V3_ABI } from "../../../abi/aave/aavePoolV3.abi.js";
-import { POOL_ADDRESSES_PROVIDER_V3_ABI } from "../../../abi/aave/poolAddressesProviderV3.abi.js";
-import { AAVE_ORACLE_ABI } from "../../../abi/aave/oracle.abi.js";
-import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
-import { isAddress } from "ethers";
+// src/blockchain/adapters/protocols/aave/arbitrum.adapter.js
+import { Contract, getAddress, isAddress } from "ethers";
 import { AaveBaseAdapter } from "../base.protocol.js";
+import { Aave } from "../../../abi/index.js";
+import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
 
 export class AaveEthereumAdapter extends AaveBaseAdapter {
   constructor({ provider, config }) {
@@ -20,7 +16,7 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
     //console.log("correctAddress: ", correctAddress);
     this.addressesProvider = new Contract(
       correctAddress,
-      POOL_ADDRESSES_PROVIDER_V3_ABI,
+      Aave.PoolAddressesProviderV3.POOL_ADDRESSES_PROVIDER_V3_ABI,
       provider,
     );
   }
@@ -28,7 +24,11 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
   async getPool() {
     if (!this.pool) {
       const poolAddress = await this.addressesProvider.getPool();
-      this.pool = new Contract(poolAddress, AAVE_POOL_V3_ABI, this.provider);
+      this.pool = new Contract(
+        poolAddress,
+        Aave.AavePoolV3.AAVE_POOL_V3_ABI,
+        this.provider,
+      );
     }
     return this.pool;
   }
@@ -37,7 +37,11 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
     if (!this.oracle) {
       const oracleAddress = await this.addressesProvider.getPriceOracle();
       //console.log("getOracle oracleAddress", oracleAddress);
-      this.oracle = new Contract(oracleAddress, AAVE_ORACLE_ABI, this.provider);
+      this.oracle = new Contract(
+        oracleAddress,
+        Aave.Oracle.AAVE_ORACLE_ABI,
+        this.provider,
+      );
       //this.baseCurrencyDecimals = await this.oracle.BASE_CURRENCY_DECIMALS();
     }
     return this.oracle;
@@ -48,7 +52,7 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
       const address = await this.addressesProvider.getPoolDataProvider();
       this.dataProvider = new Contract(
         address,
-        AAVE_DATA_PROVIDER_ABI,
+        Aave.DataProvider.AAVE_DATA_PROVIDER_ABI,
         this.provider,
       );
     }
@@ -110,59 +114,58 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
   }
 
   async getUserPositions(userAddress) {
-    const dataProvider = await this.getDataProvider();
     const pool = await this.getPool();
-    const reserves = await pool.getReservesList();
 
-    const positions = [];
+    try {
+      //const ui_pool = await this.addressesProvider.getPool();
+      const ui = new Contract(
+        this.config.DATA_PROVIDER,
+        Aave.DataProvider.AAVE_DATA_PROVIDER_ABI_ARB,
+        this.provider,
+      );
 
-    await Promise.all(
-      reserves.map(async (asset) => {
-        try {
-          const data = await dataProvider.getUserReserveData(
-            asset,
-            userAddress,
-          );
-          const [
-            aTokenBalance,
-            stableDebt,
-            variableDebt,
-            ,
-            ,
-            ,
-            ,
-            ,
-            collateral,
-          ] = data;
+      const [userReserves, userEmodeCategoryId] = await ui.getUserReservesData(
+        this.addressesProvider.target,
+        userAddress,
+      );
 
-          // если нет позиции — пропускаем
-          if (
-            aTokenBalance === 0n &&
-            stableDebt === 0n &&
-            variableDebt === 0n
-          ) {
-            return;
-          }
-          //const dataAsset = await getTokenMetadata(asset, this.provider);
-          positions.push({
-            assetAddress: asset,
-            aTokenBalance,
-            stableDebt,
-            variableDebt,
-            collateral,
-          });
-        } catch (e) {
-          console.warn("Reserve read failed:", asset);
-        }
-      }),
-    );
+      const positions = parseUserPositions(userReserves);
 
-    // 🔹 healthFactor берём из Pool
-    const { healthFactor } = await pool.getUserAccountData(userAddress);
-
-    return {
-      positions,
-      healthFactor: Number(healthFactor) / 1e18,
-    };
+      // 🔹 healthFactor берём из Pool
+      const { healthFactor } = await pool.getUserAccountData(userAddress);
+      //positions: console.log("positions: ", positions);
+      return {
+        positions,
+        healthFactor: Number(healthFactor) / 1e18,
+        error: null,
+      };
+    } catch (e) {
+      return {
+        positions: [],
+        healthFactor: 0,
+        error: e.message,
+      };
+    }
   }
+}
+
+export async function parseUserPositions(userReserves) {
+  // фильтруем реально существующие позиции и сразу возвращаем массив
+  return userReserves
+    .filter(
+      (r) =>
+        r.underlyingAsset !== "0x0000000000000000000000000000000000000000" &&
+        (r.scaledATokenBalance > 0n ||
+          r.principalStableDebt > 0n ||
+          r.scaledVariableDebt > 0n),
+    )
+    .map((r) => ({
+      assetAddress: r.underlyingAsset,
+      aTokenBalance: r.scaledATokenBalance,
+      stableDebt: r.principalStableDebt,
+      variableDebt: r.scaledVariableDebt,
+      collateral: r.usageAsCollateralEnabledOnUser,
+      stableBorrowRate: r.stableBorrowRate,
+      stableBorrowLastUpdateTimestamp: r.stableBorrowLastUpdateTimestamp,
+    }));
 }

@@ -1,11 +1,8 @@
 // src/blockchain/adapters/protocols/aave/arbitrum.adapter.js
-import { Contract, getAddress } from "ethers";
+import { Contract, getAddress, isAddress } from "ethers";
 import { AaveBaseAdapter } from "../base.protocol.js";
 import { Aave } from "../../../abi/index.js";
 import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
-import { isAddress } from "ethers";
-
-const UI_POOL_DATA_PROVIDER = "0x145de30c929a065582da84cf96f88460db9745a7";
 
 export class AaveArbitrumAdapter extends AaveBaseAdapter {
   constructor({ provider, config }) {
@@ -116,87 +113,39 @@ export class AaveArbitrumAdapter extends AaveBaseAdapter {
     return prices;
   }
 
-  async getUserPositions1(userAddress) {
-    const dataProvider = await this.getDataProvider();
-    const pool = await this.getPool();
-    const reserves = await pool.getReservesList();
-    const positions = [];
-
-    await Promise.all(
-      reserves.map(async (asset) => {
-        try {
-          const data = await dataProvider.getUserReserveData(
-            asset,
-            userAddress,
-          );
-          //console.log("getUserPositions data: ", data);
-          const [
-            aTokenBalance,
-            stableDebt,
-            variableDebt,
-            ,
-            ,
-            ,
-            ,
-            ,
-            collateral,
-          ] = data;
-
-          // если нет позиции — пропускаем
-          if (
-            aTokenBalance === 0n &&
-            stableDebt === 0n &&
-            variableDebt === 0n
-          ) {
-            return;
-          }
-          //const dataAsset = await getTokenMetadata(asset, this.provider);
-          positions.push({
-            assetAddress: asset,
-            aTokenBalance,
-            stableDebt,
-            variableDebt,
-            collateral,
-          });
-        } catch (e) {
-          console.warn("Reserve read failed:", asset, e);
-        }
-      }),
-    );
-
-    // 🔹 healthFactor берём из Pool
-    const { healthFactor } = await pool.getUserAccountData(userAddress);
-
-    return {
-      positions,
-      healthFactor: Number(healthFactor) / 1e18,
-    };
-  }
-
   async getUserPositions(userAddress) {
     const pool = await this.getPool();
-    const ui = new Contract(
-      UI_POOL_DATA_PROVIDER,
-      [
-        "function getUserReservesData(address, address) view returns (tuple(address underlyingAsset,uint256 scaledATokenBalance,uint256 usageAsCollateralEnabledOnUser,uint256 scaledVariableDebt,uint256 principalStableDebt,uint256 stableBorrowRate,uint256 stableBorrowLastUpdateTimestamp)[] userReservesData, uint8 userEmodeCategoryId)",
-      ],
-      this.provider,
-    );
 
-    const [userReserves, userEmodeCategoryId] = await ui.getUserReservesData(
-      this.addressesProvider.target,
-      userAddress,
-    );
+    try {
+      const uiAddress = getAddress(this.config.DATA_PROVIDER);
+      const ui = new Contract(
+        uiAddress,
+        Aave.DataProvider.AAVE_DATA_PROVIDER_ABI_ARB,
+        this.provider,
+      );
 
-    const positions = parseUserPositions(userReserves);
+      const [userReserves, userEmodeCategoryId] = await ui.getUserReservesData(
+        this.addressesProvider.target,
+        userAddress,
+      );
 
-    // 🔹 healthFactor берём из Pool
-    const { healthFactor } = await pool.getUserAccountData(userAddress);
-    console.log("positions: ", positions);
-    return {
-      positions,
-      healthFactor: Number(healthFactor) / 1e18,
-    };
+      const positions = parseUserPositions(userReserves);
+
+      // 🔹 healthFactor берём из Pool
+      const { healthFactor } = await pool.getUserAccountData(userAddress);
+      //positions: console.log("positions: ", positions);
+      return {
+        positions,
+        healthFactor: Number(healthFactor) / 1e18,
+        error: null,
+      };
+    } catch (e) {
+      return {
+        positions: [],
+        healthFactor: 0,
+        error: e.message,
+      };
+    }
   }
 }
 

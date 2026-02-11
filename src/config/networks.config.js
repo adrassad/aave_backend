@@ -8,6 +8,7 @@ export const networksConfig = {
     protocols: {
       aave: {
         ADDRESSES_PROVIDER: process.env.ETHEREUM_AAVE_ADDRESSES_PROVIDER,
+        DATA_PROVIDER: process.env.ETHEREUM_AAVE_POOL_DATA_PROVIDER,
       },
     },
   },
@@ -20,6 +21,7 @@ export const networksConfig = {
     protocols: {
       aave: {
         ADDRESSES_PROVIDER: process.env.ARBITRUM_AAVE_ADDRESSES_PROVIDER,
+        DATA_PROVIDER: process.env.ARBITRUM_AAVE_POOL_DATA_PROVIDER,
       },
     },
   },
@@ -33,6 +35,7 @@ export const networksConfig = {
     protocols: {
       aave: {
         ADDRESSES_PROVIDER: process.env.AVALANCHE_AAVE_ADDRESSES_PROVIDER,
+        DATA_PROVIDER: process.env.AVALANCHE_AAVE_POOL_DATA_PROVIDER,
       },
     },
   },

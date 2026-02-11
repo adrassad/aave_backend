@@ -2,6 +2,7 @@
 import { Markup } from "telegraf";
 import { getUserWallets } from "../../services/wallet/wallet.service.js";
 import { getWalletPositions } from "../../services/aave.service.js";
+import { message } from "telegraf/filters";
 
 export function positionsCommand(bot) {
   // Команда /positions
@@ -49,9 +50,15 @@ export function positionsCommand(bot) {
       );
       //console.log("/wallet_positions networksPositions: ", networksPositions);
       for (const [networkName, data] of Object.entries(networksPositions)) {
-        const { supplies, borrows, totals, healthFactor } = data;
+        const { supplies, borrows, totals, healthFactor, error } = data;
 
         await ctx.reply(`🔗 Network: ${networkName}`);
+        if (error) {
+          ctx.reply(`error: ${error}`);
+          ctx.reply(`🛡 Health Factor: ${healthFactor.toFixed(3)}`);
+          continue;
+        }
+
         if (!supplies.length && !borrows.length) {
           await ctx.reply(`ℹ️ Нет активных позиций в Aave.`);
         } else {
