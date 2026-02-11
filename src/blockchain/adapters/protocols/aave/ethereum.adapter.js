@@ -1,9 +1,10 @@
 // src/blockchain/adapters/protocols/aave/arbitrum.adapter.js
 import { Contract, getAddress, isAddress } from "ethers";
+
 import { AaveBaseAdapter } from "../base.protocol.js";
 import { Aave } from "../../../abi/index.js";
 import { getTokenMetadata } from "../../../helpers/tokenMetadata.js";
-
+import { formatHealthFactor } from "../../../helpers/healthFactor.js";
 export class AaveEthereumAdapter extends AaveBaseAdapter {
   constructor({ provider, config }) {
     super({ provider, config });
@@ -113,9 +114,27 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
     return prices;
   }
 
-  async getUserPositions(userAddress) {
-    const pool = await this.getPool();
+  async getHealthFactor(userAddress) {
+    try {
+      const pool = await this.getPool();
+      const { healthFactor } = await pool.getUserAccountData(userAddress);
 
+      return formatHealthFactor(healthFactor);
+    } catch (e) {
+      console.warn("⚠️ getHealthFactor failed:", e.message);
+      return "0.0000";
+    }
+  }
+
+  async getUserPositions(userAddress) {
+    const healthFactor = await this.getHealthFactor(userAddress);
+    console.log("healthFactor: ", healthFactor);
+    const hf =
+      typeof healthFactor === "number"
+        ? healthFactor
+        : Number(healthFactor) || 0;
+
+    hf.toFixed(2);
     try {
       //const ui_pool = await this.addressesProvider.getPool();
       const ui = new Contract(
@@ -131,18 +150,16 @@ export class AaveEthereumAdapter extends AaveBaseAdapter {
 
       const positions = parseUserPositions(userReserves);
 
-      // 🔹 healthFactor берём из Pool
-      const { healthFactor } = await pool.getUserAccountData(userAddress);
       //positions: console.log("positions: ", positions);
       return {
         positions,
-        healthFactor: Number(healthFactor) / 1e18,
+        healthFactor: healthFactor,
         error: null,
       };
     } catch (e) {
       return {
         positions: [],
-        healthFactor: 0,
+        healthFactor: healthFactor,
         error: e.message,
       };
     }
