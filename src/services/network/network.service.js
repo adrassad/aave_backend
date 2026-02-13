@@ -5,10 +5,18 @@ import {
 } from "../../cache/network.cashe.js";
 
 export async function getEnabledNetworks() {
-  return await getEnabledNetworksCache();
+  const cached = await getEnabledNetworksCache();
+  if (!cached || Object.keys(cached).length === 0) {
+    return getEnabledNetworksFromDB();
+  }
+  return cached;
 }
 
 export async function loadNetworksToCache() {
+  await setNetworksToCashe(getEnabledNetworksFromDB());
+}
+
+export async function getEnabledNetworksFromDB() {
   const networks = await db.networks.getNetworks();
   const mapNetworks = {};
   for (const network of networks) {
@@ -20,5 +28,5 @@ export async function loadNetworksToCache() {
       enabled: network.enabled,
     };
   }
-  await setNetworksToCashe(mapNetworks);
+  return mapNetworks;
 }
