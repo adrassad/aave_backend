@@ -116,7 +116,7 @@ export class AaveArbitrumAdapter extends AaveBaseAdapter {
       return parseHealthFactor(healthFactor);
     } catch (e) {
       console.warn("⚠️ getUserHealthFactor failed: ", userAddress, e.message);
-      return "0.0000";
+      return null;
     }
   }
 

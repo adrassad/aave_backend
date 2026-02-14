@@ -94,7 +94,7 @@ export class AaveAvalancheAdapter extends AaveBaseAdapter {
       return parseHealthFactor(data.healthFactor);
     } catch (e) {
       console.warn("⚠️ getUserHealthFactor failed:", e.message);
-      return 0;
+      return null;
     }
   }
 
