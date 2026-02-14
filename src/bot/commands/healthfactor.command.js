@@ -1,52 +1,51 @@
 import { Markup } from "telegraf";
 import { getUserWallets } from "../../services/wallet/wallet.service.js";
-import { getWalletHealthFactor } from "../../services/aave.service.js";
-import { formatHealthFactorForUI } from "../utils/formatters.js";
+import { formatHealthFactorOverview } from "../utils/hfFormatter.js";
+import { collectHealthFactors } from "../../services/healthfactor/healthfactor.collector.js";
 
 export function healthFactorCommand(bot) {
   bot.command("healthfactor", async (ctx) => {
-    const telegramId = ctx.from.id;
-    const wallets = await getUserWallets(telegramId);
+    const userId = ctx.from.id;
+    const wallets = await getUserWallets(userId);
+
     if (!wallets.length) {
       return ctx.reply(
         "⚠️ У вас ещё нет кошельков. Добавьте через ➕ Add Wallet.",
       );
     }
-    // Формируем кнопки для выбора кошелька
+
     const buttons = wallets.map((w) =>
       Markup.button.callback(w.address, `wallet_healthfactor:${w.id}`),
     );
 
     await ctx.reply(
-      "💼 Выберите кошелек для получения healthfactor на aave:",
+      "💼 Выберите кошелек для получения healthfactor на Aave:",
       Markup.inlineKeyboard(buttons, { columns: 1 }),
     );
   });
 
   bot.action(/wallet_healthfactor:(\d+)/, async (ctx) => {
     const walletId = Number(ctx.match[1]);
+    const userId = ctx.from.id;
 
-    // Получаем кошелек из базы
-    const wallets = await getUserWallets(ctx.from.id);
-    const wallet = wallets.find((w) => w.id === walletId);
-
-    if (!wallet) {
-      await ctx.answerCbQuery("❌ Кошелек не найден");
-      return;
-    }
-
-    await ctx.answerCbQuery(); // убираем "часики" Telegram
+    await ctx.answerCbQuery();
 
     try {
-      //await ctx.reply(`💼 Кошелек: ${wallet.address}`);
-      const networksPositions = await getWalletHealthFactor(
-        ctx.from.id,
-        wallet.address,
-      );
-      for (const [networkName, data] of Object.entries(networksPositions)) {
-        await ctx.reply(`🔗 ${networkName.toUpperCase()}`);
-        await ctx.reply(`🛡 Health Factor: ${formatHealthFactorForUI(data)}`);
+      const resultMap = await collectHealthFactors({
+        userId,
+        walletId,
+        checkChange: false,
+      });
+
+      const walletMap = resultMap.get(userId);
+
+      if (!walletMap) {
+        return ctx.reply("❌ Кошелек не найден");
       }
+
+      const message = formatHealthFactorOverview(walletMap);
+
+      await ctx.reply(message, { parse_mode: "HTML" });
     } catch (e) {
       console.error(e);
       await ctx.reply("⚠️ Ошибка при получении позиций Aave.");
