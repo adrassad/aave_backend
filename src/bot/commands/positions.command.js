@@ -1,14 +1,16 @@
 // src/bot/commands/positions.command.js
 import { Markup } from "telegraf";
 import { getUserWallets } from "../../services/wallet/wallet.service.js";
-import { getWalletPositions } from "../../services/aave.service.js";
-import { formatHealthFactorForUI } from "../utils/formatters.js";
+import { getWalletPositions } from "../../services/positions/position.service.js";
+import { formatPositionsOverview } from "../utils/formatPositionsOverview.js";
+import pLimit from "p-limit";
+
+const CONCURRENCY = 5;
 
 export function positionsCommand(bot) {
-  // Команда /positions
   bot.command("positions", async (ctx) => {
-    const telegramId = ctx.from.id;
-    const wallets = await getUserWallets(telegramId);
+    const userId = ctx.from.id;
+    const wallets = await getUserWallets(userId);
 
     if (!wallets.length) {
       return ctx.reply(
@@ -16,7 +18,6 @@ export function positionsCommand(bot) {
       );
     }
 
-    // Формируем кнопки для выбора кошелька
     const buttons = wallets.map((w) =>
       Markup.button.callback(w.address, `wallet_positions:${w.id}`),
     );
@@ -27,74 +28,41 @@ export function positionsCommand(bot) {
     );
   });
 
-  // Обработка нажатия на кнопку кошелька
   bot.action(/wallet_positions:(\d+)/, async (ctx) => {
     const walletId = Number(ctx.match[1]);
+    const userId = ctx.from.id;
 
-    // Получаем кошелек из базы
-    const wallets = await getUserWallets(ctx.from.id);
-    const wallet = wallets.find((w) => w.id === walletId);
-
-    if (!wallet) {
-      await ctx.answerCbQuery("❌ Кошелек не найден");
-      return;
-    }
-
-    await ctx.answerCbQuery(); // убираем "часики" Telegram
+    await ctx.answerCbQuery(); // убираем "часики"
 
     try {
-      //await ctx.reply(`💼 Кошелек: ${wallet.address}`);
-      const networksPositions = await getWalletPositions(
-        ctx.from.id,
-        wallet.address,
-      );
-      for (const [networkName, data] of Object.entries(networksPositions)) {
-        const { supplies, borrows, totals, healthFactor, error } = data;
+      const wallets = await getUserWallets(userId);
+      const wallet = wallets.find((w) => w.id === walletId);
 
-        await ctx.reply(`🔗 ${networkName.toUpperCase()}`);
-        if (error) {
-          ctx.reply(`error: ${error}`);
-          ctx.reply(
-            `🛡 Health Factor: ${formatHealthFactorForUI(healthFactor)}`,
-          );
-          continue;
-        }
-
-        if (!supplies.length && !borrows.length) {
-          await ctx.reply(`ℹ️ Нет активных позиций в Aave.`);
-        } else {
-          let messages = [];
-          messages.push(`💰 Aave value: ${totals.netUsd.toFixed(2)}`);
-
-          if (supplies.length) {
-            let text = `📈 Supplied (Total: ${totals.suppliedUsd.toFixed(2)} USD):\n`;
-            for (const s of supplies) {
-              text += `• ${s.symbol}: ${(s.amount ?? 0).toFixed(5)} (${(s.usd ?? 0).toFixed(2)} USD)`;
-              if (s.collateral) text += " 🔒 as collateral";
-              text += "\n";
-            }
-            messages.push(text);
-          }
-
-          if (borrows.length) {
-            let text = `📉 Borrowed (Total: ${totals.borrowedUsd.toFixed(2)} USD):\n`;
-            for (const b of borrows) {
-              text += `• ${b.symbol}: ${(b.amount ?? 0).toFixed(5)} (${(b.usd ?? 0).toFixed(2)} USD)`;
-              text += "\n";
-            }
-            messages.push(text);
-          }
-
-          messages.push(
-            `🛡 Health Factor: ${formatHealthFactorForUI(healthFactor)}`,
-          );
-
-          // Отправляем все сообщения
-          for (const msg of messages) {
-            await ctx.reply(msg);
-          }
-        }
+      if (!wallet) {
+        return ctx.reply("❌ Кошелек не найден");
       }
+
+      const networks = await getWalletPositions(userId, wallet.address);
+      const resultMap = new Map();
+      const walletMap = new Map();
+
+      const limit = pLimit(CONCURRENCY);
+      const tasks = [];
+
+      for (const [networkName, data] of Object.entries(networks)) {
+        tasks.push(
+          limit(async () => {
+            walletMap.set(networkName, data);
+          }),
+        );
+      }
+
+      await Promise.allSettled(tasks);
+
+      resultMap.set(wallet.address, walletMap);
+
+      const message = formatPositionsOverview(resultMap);
+      await ctx.reply(message, { parse_mode: "HTML" });
     } catch (e) {
       console.error(e);
       await ctx.reply("⚠️ Ошибка при получении позиций Aave.");

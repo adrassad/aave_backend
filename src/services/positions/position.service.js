@@ -1,9 +1,9 @@
 // src/services/aave.service.js
-import { getUserPositions, getUserHealthFactor } from "../blockchain/index.js";
-import { getEnabledNetworks } from "./network/network.service.js";
-import { getAssetPriceUSD } from "./price/price.service.js";
-import { getAssetByAddress } from "./asset/asset.service.js";
-import { assertCanViewPositions } from "./subscription/subscription.service.js";
+import { getUserPositions } from "../../blockchain/index.js";
+import { getEnabledNetworks } from "../network/network.service.js";
+import { getAssetPriceUSD } from "../price/price.service.js";
+import { getAssetByAddress } from "../asset/asset.service.js";
+import { assertCanViewPositions } from "../subscription/subscription.service.js";
 
 /*
  * Получение позиций пользователя в Aave
@@ -78,23 +78,6 @@ export async function getWalletPositions(userId, walletAddress) {
       },
       healthFactor,
     };
-  }
-  return networksPositions;
-}
-
-export async function getWalletHealthFactor(userId, walletAddress) {
-  // 🔐 Проверка подписки
-  await assertCanViewPositions(userId);
-
-  const networksPositions = {};
-  // Получаем данные Aave через фасад
-  const networks = await getEnabledNetworks();
-
-  for (const network of Object.values(networks)) {
-    let result = await getUserHealthFactor(network.name, "aave", walletAddress);
-    const healthFactor = result || 0;
-
-    networksPositions[network.name] = healthFactor;
   }
   return networksPositions;
 }
