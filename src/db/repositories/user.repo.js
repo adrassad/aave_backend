@@ -2,10 +2,6 @@
 
 export function createUserRepository(db) {
   return {
-    /*
-     * Найти пользователя по Telegram ID
-     * @param {number} telegramId
-     */
     async findByTelegramId(telegramId) {
       const res = await db.query(`SELECT * FROM users WHERE telegram_id = $1`, [
         telegramId,
@@ -13,10 +9,11 @@ export function createUserRepository(db) {
       return res.rows[0] || null;
     },
 
-    /*
-     * Создать нового пользователя с дефолтной подпиской
-     * @param {number} telegramId
-     */
+    async getAllUsers() {
+      const res = await db.query(`SELECT * FROM users`);
+      return res.rows || [];
+    },
+
     async create(telegramId) {
       await db.query(
         `
@@ -36,12 +33,6 @@ export function createUserRepository(db) {
       );
     },
 
-    /*
-     * Обновить подписку пользователя
-     * @param {number} telegramId
-     * @param {string} level
-     * @param {string|Date} endDate
-     */
     async updateSubscription(telegramId, level, endDate) {
       await db.query(
         `UPDATE users
