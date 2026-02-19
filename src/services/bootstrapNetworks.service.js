@@ -1,6 +1,7 @@
 import { networksConfig } from "../config/networks.config.js";
 import { db } from "../db/index.js";
 import { loadNetworksToCache } from "./network/network.service.js";
+import { loadUsersToCache } from "./user/user.service.js";
 
 export async function bootstrapNetworksService() {
   const networks = Object.entries(networksConfig).map(([name, cfg]) => ({
@@ -14,4 +15,5 @@ export async function bootstrapNetworksService() {
   }
   console.log("🌐 Networks bootstrapped", new Date().toISOString());
   await loadNetworksToCache();
+  await loadUsersToCache();
 }

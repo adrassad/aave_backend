@@ -10,7 +10,14 @@ export async function calculateAndStoreHF({
   checkChange = true, // 👈 важно
 }) {
   const rawHF = await getUserHealthFactor(network.name, "aave", address);
-
+  if (rawHF == null)
+    return {
+      userId,
+      address,
+      network: network.name,
+      healthfactor: null,
+      isChanged: false,
+    };
   const healthfactor =
     rawHF === Infinity ? Infinity : Number(Number(rawHF).toFixed(2));
 
