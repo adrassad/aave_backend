@@ -2,7 +2,11 @@
 
 import pLimit from "p-limit";
 import { getEnabledNetworks } from "../network/network.service.js";
-import { getAllWallets, getUserWallets } from "../wallet/wallet.service.js";
+import {
+  getAllWallets,
+  getUserWallets,
+  getUserWallet,
+} from "../wallet/wallet.service.js";
 import { calculateAndStoreHF } from "./healthfactor.core.js";
 
 const CONCURRENCY = 5;
@@ -17,7 +21,7 @@ const CONCURRENCY = 5;
  */
 export async function collectHealthFactors({
   userId = null,
-  walletId = null,
+  address = null,
   checkChange = false,
 }) {
   const networks = await getEnabledNetworks();
@@ -28,9 +32,9 @@ export async function collectHealthFactors({
 
   // 🟢 1. Определяем набор кошельков
   let wallets;
-  if (userId && walletId) {
-    const userWallets = await getUserWallets(userId);
-    const wallet = userWallets.find((w) => w.id === walletId);
+  if (userId && address) {
+    const wallet = await getUserWallet(userId, address);
+
     if (!wallet) return new Map();
 
     wallets = new Map();

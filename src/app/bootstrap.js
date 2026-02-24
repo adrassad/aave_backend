@@ -4,6 +4,7 @@ import { bootstrapNetworksService } from "../services/bootstrapNetworks.service.
 import { bootstrapUsersService } from "../services/bootstrapUsers.service.js";
 import { bootstrapAssetsService } from "../services/bootstrapAssets.service.js";
 import { bootstrapPricesService } from "../services/bootstrapPrices.service.js";
+import { bootstrapWalletsService } from "../services/bootstrapWallets.service.js";
 
 export async function bootstrapApp() {
   await initDb();
@@ -11,4 +12,5 @@ export async function bootstrapApp() {
   await bootstrapUsersService();
   await bootstrapAssetsService();
   await bootstrapPricesService();
+  await bootstrapWalletsService();
 }

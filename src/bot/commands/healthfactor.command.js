@@ -13,15 +13,19 @@ export function healthFactorCommand(bot) {
 
     const wallets = await getUserWallets(userId);
 
-    if (!wallets.length) {
+    if (!wallets.size) {
       return ctx.reply(
         "⚠️ У вас ещё нет кошельков. Добавьте через ➕ Add Wallet.",
       );
     }
 
-    const buttons = wallets.map((w) =>
-      Markup.button.callback(w.address, `wallet_healthfactor:${w.id}`),
-    );
+    const buttons = [];
+
+    for (const [address, wallet] of wallets) {
+      buttons.push(
+        Markup.button.callback(address, `wallet_healthfactor:${address}`),
+      );
+    }
 
     await ctx.reply(
       "💼 Выберите кошелек для получения healthfactor на Aave:",
@@ -29,15 +33,15 @@ export function healthFactorCommand(bot) {
     );
   });
 
-  bot.action(/wallet_healthfactor:(\d+)/, async (ctx) => {
-    const walletId = Number(ctx.match[1]);
+  bot.action(/wallet_healthfactor:(.+)/, async (ctx) => {
+    const address = ctx.match[1];
     const userId = ctx.from.id;
 
     await ctx.answerCbQuery();
 
     const resultMap = await collectHealthFactors({
       userId,
-      walletId,
+      address,
       checkChange: false,
     });
 

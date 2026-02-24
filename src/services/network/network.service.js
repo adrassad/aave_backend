@@ -15,7 +15,7 @@ export async function getEnabledNetworks() {
 export async function getNetwork(networkId) {
   const cached = await getEnabledNetworksCache();
   if (!cached[networkId]) {
-    return db.networks.getNetworkById(networkId);
+    return db.networks.findById(networkId);
   }
   return cached[networkId];
 }
@@ -31,7 +31,7 @@ export async function loadNetworksToCache() {
 }
 
 export async function getEnabledNetworksFromDB() {
-  const networks = await db.networks.getNetworks();
+  const networks = await db.networks.findAll();
   const mapNetworks = {};
   for (const network of networks) {
     mapNetworks[network.id] = {

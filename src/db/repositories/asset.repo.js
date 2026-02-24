@@ -1,43 +1,51 @@
 // src/db/repositories/asset.repo.js
 
-export function createAssetRepository(db) {
-  return {
-    async upsertAsset({ network_id, address, symbol, decimals }) {
-      return db.query(
-        `
+import { BaseRepository } from "./base.repository.js";
+
+export class AssetRepository extends BaseRepository {
+  constructor(db) {
+    super(db, "assets", "id");
+  }
+
+  async create(object) {
+    const result = await this.db.query(
+      `
         INSERT INTO assets (network_id, address, symbol, decimals)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (address)
         DO UPDATE SET
           symbol = EXCLUDED.symbol,
           decimals = EXCLUDED.decimals
+        RETURNING *
         `,
-        [network_id, address.toLowerCase(), symbol, decimals],
-      );
-    },
+      [
+        object.network_id,
+        object.address.toLowerCase(),
+        object.symbol,
+        object.decimals,
+      ],
+    );
+    return result.rows[0] || null;
+  }
 
-    async findByAddress(networkId, address) {
-      const res = await db.query(`SELECT * FROM assets WHERE address = $1`, [
-        address,
-      ]);
-      return res.rows[0] || null;
-    },
+  async findByAddress(networkId, address) {
+    const res = await this.db.query(`SELECT * FROM assets WHERE address = $1`, [
+      address,
+    ]);
+    return res.rows[0] || null;
+  }
 
-    async getAll() {
-      const res = await db.query(`SELECT * FROM assets`);
-      return res.rows;
-    },
+  async findByNetwork(network_id) {
+    const res = await this.db.query(
+      `SELECT * FROM assets WHERE network_id = $1`,
+      [network_id],
+    );
+    return res.rows;
+  }
 
-    async getByNetwork(network_id) {
-      const res = await db.query(`SELECT * FROM assets WHERE network_id = $1`, [
-        network_id,
-      ]);
-      return res.rows;
-    },
-
-    async findAllBySymbol(symbol) {
-      const res = await db.query(
-        `
+  async findAllBySymbol(symbol) {
+    const res = await this.db.query(
+      `
         SELECT 
           a.id, 
           a.address, 
@@ -52,9 +60,8 @@ export function createAssetRepository(db) {
       ORDER BY a.address;
 
         `,
-        [symbol.toUpperCase()],
-      );
-      return res.rows;
-    },
-  };
+      [symbol.toUpperCase()],
+    );
+    return res.rows;
+  }
 }

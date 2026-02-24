@@ -36,7 +36,7 @@ export async function loadLastPricesToCache() {
 
 export async function loadPricesToCache(network_id) {
   if (!network_id) return;
-  const pricesDb = await db.prices.getLastPriceByNetwork(network_id);
+  const pricesDb = await db.prices.getLastPricesByNetwork(network_id);
   const prices = {};
   for (const price of pricesDb) {
     prices[price.address.toLowerCase()] = {
@@ -96,7 +96,11 @@ export async function savePriceIfChanged(network, asset, priceUsd) {
   }
 
   try {
-    await db.prices.savePrice(network.id, asset.id, priceUsd);
+    await db.prices.create({
+      network_id: network.id,
+      asset_id: asset.id,
+      priceUsd: priceUsd,
+    });
   } catch (e) {
     console.error(`❌ Failed to save price for ${asset.id}:`, e);
   }
