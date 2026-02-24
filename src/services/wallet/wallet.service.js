@@ -15,7 +15,7 @@ function normalizeAddress(address) {
 
 export async function addUserWallet(telegramId, address, label = null) {
   //🔐 ПРОВЕРКА ПОДПИСКИ
-  const count = await db.wallets.count(telegramId);
+  const count = await db.wallets.exists(telegramId);
   await assertCanAddWallet(telegramId, count);
 
   // 🔐 Проверка адреса

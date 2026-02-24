@@ -11,32 +11,28 @@ import { getEnabledNetworks } from "../network/network.service.js";
 export async function syncAssets() {
   console.log("⏱ Asset sync started");
   const networks = await getEnabledNetworks();
-  for (const network of Object.values(networks)) {
-    console.log(`Asset 🔗${network.name} `, network.id);
-
-    // 1️⃣ Получаем assets из blockchain
-    const assets = await getAssets(network.name, "aave");
-
-    // 2️⃣ Upsert assets в БД
-    await upsertAssets(network.id, assets);
-
-    // 3️⃣ Обновляем кеш ТОЛЬКО для этой сети
-    await loadAssetsToCache(network.id);
-  }
+  await Promise.all(
+    Object.values(networks).map(async (network) => {
+      console.log(`Asset 🔗${network.name} `, network.id);
+      const assets = await getAssets(network.name, "aave");
+      await upsertAssets(network.id, assets);
+      await loadAssetsToCache(network.id);
+    }),
+  );
 }
 
 /**
  * Загрузка ассетов (из Aave / chain / json)
  */
 export async function upsertAssets(network_id, assets) {
-  for (const a of assets) {
-    await db.assets.create({
-      network_id: network_id,
+  await db.assets.bulkUpsert(
+    assets.map((a) => ({
+      network_id,
       address: a.address,
       symbol: a.symbol,
       decimals: a.decimals,
-    });
-  }
+    })),
+  );
 }
 
 /**
@@ -69,24 +65,41 @@ export async function getAsset(networkId, addressOrSymbol) {
 
 export async function loadAllAssetsToCache() {
   const networks = Object.values(await getEnabledNetworks());
-  for (const network of networks) {
-    await loadAssetsToCache(network.id);
-  }
+
+  await Promise.all(
+    networks.map(async (network) => {
+      const assets = await getAssets(network.name, "aave");
+
+      await db.assets.bulkUpsert(
+        assets.map((a) => ({
+          network_id: network.id,
+          address: a.address,
+          symbol: a.symbol,
+          decimals: a.decimals,
+        })),
+      );
+
+      await loadAssetsToCache(network.id);
+    }),
+  );
 }
 
 export async function loadAssetsToCache(network_id) {
   if (!network_id) return;
   const assets = await db.assets.findByNetwork(network_id);
-  const assetsByAddress = {};
-  for (const asset of assets) {
-    assetsByAddress[asset.address.toLowerCase()] = {
-      id: asset.id,
-      network_id: asset.network_id,
-      address: asset.address,
-      symbol: asset.symbol,
-      decimals: asset.decimals,
-    };
-  }
+
+  const assetsByAddress = Object.fromEntries(
+    assets.map((a) => [
+      a.address.toLowerCase(),
+      {
+        id: a.id,
+        network_id: a.network_id,
+        address: a.address,
+        symbol: a.symbol,
+        decimals: a.decimals,
+      },
+    ]),
+  );
   await setAssetsToCache(network_id, assetsByAddress);
   console.log(
     `✅ Cached assets for network ${network_id}:`,

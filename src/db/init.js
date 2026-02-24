@@ -1,19 +1,22 @@
-// src/db/initDb.js
 import { PostgresClient } from "./postgres.client.js";
 
 const dbClient = new PostgresClient();
 
 export async function initDb() {
-  // ---- USERS ----
+  //
+  // USERS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS users (
       telegram_id BIGINT PRIMARY KEY,
       subscription_level TEXT NOT NULL DEFAULT 'free',
-      subscription_end TIMESTAMP
-    )
+      subscription_end TIMESTAMPTZ
+    );
   `);
 
-  // ---- WALLETS ----
+  //
+  // WALLETS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS wallets (
       id SERIAL PRIMARY KEY,
@@ -22,111 +25,187 @@ export async function initDb() {
         ON DELETE CASCADE,
       address TEXT NOT NULL,
       label TEXT,
-      created_at TIMESTAMP DEFAULT NOW(),
-      UNIQUE (user_id, address)
-    )
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+
+      CONSTRAINT wallets_user_address_unique
+        UNIQUE (user_id, address)
+    );
   `);
+
   await dbClient.query(`
     CREATE INDEX IF NOT EXISTS idx_wallets_user_id
     ON wallets(user_id);
   `);
 
-  // ---- NETWORKS ----
+  await dbClient.query(`
+    CREATE INDEX IF NOT EXISTS idx_wallets_address
+    ON wallets(address);
+  `);
+
+  //
+  // NETWORKS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS networks (
       id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL UNIQUE,       
+      name TEXT NOT NULL UNIQUE,
       chain_id INTEGER NOT NULL UNIQUE,
-      native_symbol TEXT NOT NULL,     
-      enabled BOOLEAN DEFAULT TRUE,
-      created_at TIMESTAMP DEFAULT NOW()
-    )
+      native_symbol TEXT NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 
-  // ---- ASSETS ----
+  //
+  // ASSETS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS assets (
       id SERIAL PRIMARY KEY,
+
       network_id INTEGER NOT NULL
         REFERENCES networks(id)
         ON DELETE CASCADE,
-      address TEXT NOT NULL UNIQUE,
+
+      address TEXT NOT NULL,
+
       symbol TEXT NOT NULL,
-      decimals INTEGER NOT NULL
-    )
+
+      decimals INTEGER NOT NULL,
+
+      CONSTRAINT assets_network_address_unique
+        UNIQUE (network_id, address)
+    );
   `);
 
-  // ---- PRICES ----
+  await dbClient.query(`
+    CREATE INDEX IF NOT EXISTS idx_assets_network
+    ON assets(network_id);
+  `);
+
+  await dbClient.query(`
+    CREATE INDEX IF NOT EXISTS idx_assets_symbol
+    ON assets(symbol);
+  `);
+
+  await dbClient.query(`
+    CREATE INDEX IF NOT EXISTS idx_assets_address
+    ON assets(address);
+  `);
+
+  //
+  // PRICES
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS prices (
       id SERIAL PRIMARY KEY,
+
       network_id INTEGER NOT NULL
         REFERENCES networks(id)
         ON DELETE CASCADE,
-      asset_id INTEGER REFERENCES assets(id),
+
+      asset_id INTEGER NOT NULL
+        REFERENCES assets(id)
+        ON DELETE CASCADE,
+
       price_usd NUMERIC(38,18) NOT NULL,
-      timestamp TIMESTAMP NOT NULL DEFAULT NOW()
-    )
+
+      timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
+
   await dbClient.query(`
-    CREATE INDEX IF NOT EXISTS idx_prices_network_asset_timestamp
+    CREATE INDEX IF NOT EXISTS idx_prices_lookup
     ON prices(network_id, asset_id, timestamp DESC);
   `);
 
-  // ---- HEALTHFACTORS ----
+  //
+  // HEALTHFACTORS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS healthfactors (
       id SERIAL PRIMARY KEY,
+
       wallet_id INTEGER NOT NULL
         REFERENCES wallets(id)
         ON DELETE CASCADE,
+
       protocol TEXT NOT NULL,
+
       network_id INTEGER NOT NULL
         REFERENCES networks(id)
         ON DELETE CASCADE,
-      healthfactor DOUBLE PRECISION NOT NULL,
-      timestamp TIMESTAMP NOT NULL DEFAULT NOW()
-    );
 
+      healthfactor DOUBLE PRECISION NOT NULL,
+
+      timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
-  // Индекс для быстрого поиска последнего HF
+
   await dbClient.query(`
-    CREATE INDEX IF NOT EXISTS idx_healthfactors_wallet_protocol_network_timestamp
+    CREATE INDEX IF NOT EXISTS idx_hf_lookup
     ON healthfactors(wallet_id, protocol, network_id, timestamp DESC);
   `);
-  // Уникальный индекс, чтобы исключить дублирование записи в одно и то же время
+
   await dbClient.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS uniq_healthfactors_wallet_protocol_network_timestamp
+    CREATE UNIQUE INDEX IF NOT EXISTS uniq_hf_exact
     ON healthfactors(wallet_id, protocol, network_id, timestamp);
   `);
 
-  // ---- MONITORS ----
+  //
+  // MONITORS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS monitors (
       id SERIAL PRIMARY KEY,
-      user_id BIGINT REFERENCES users(telegram_id),
-      wallet_address TEXT,
+
+      user_id BIGINT
+        REFERENCES users(telegram_id)
+        ON DELETE CASCADE,
+
+      wallet_address TEXT NOT NULL,
+
       threshold NUMERIC(38,18),
+
       last_health_factor NUMERIC(38,18),
-      last_alert_at TIMESTAMP
-    )
+
+      last_alert_at TIMESTAMPTZ
+    );
   `);
+
   await dbClient.query(`
-    CREATE INDEX IF NOT EXISTS idx_monitors_user_id
+    CREATE INDEX IF NOT EXISTS idx_monitors_user
     ON monitors(user_id);
   `);
 
-  // ---- PAYMENTS_PENDING ----
+  //
+  // PAYMENTS
+  //
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS payments_pending (
       id SERIAL PRIMARY KEY,
-      user_id BIGINT REFERENCES users(telegram_id),
-      payment_address TEXT,
-      amount_eth NUMERIC(38,18),
-      status TEXT DEFAULT 'pending',
-      created_at TIMESTAMP DEFAULT NOW()
-    )
+
+      user_id BIGINT
+        REFERENCES users(telegram_id)
+        ON DELETE CASCADE,
+
+      payment_address TEXT NOT NULL,
+
+      amount_eth NUMERIC(38,18) NOT NULL,
+
+      status TEXT NOT NULL DEFAULT 'pending',
+
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+
+      CONSTRAINT payments_status_check
+        CHECK (status IN ('pending','confirmed','expired','failed'))
+    );
   `);
 
-  console.log("✅ All tables initialized", new Date().toISOString());
+  await dbClient.query(`
+    CREATE INDEX IF NOT EXISTS idx_payments_user
+    ON payments_pending(user_id);
+  `);
+
+  console.log("✅ DB initialized");
 }
