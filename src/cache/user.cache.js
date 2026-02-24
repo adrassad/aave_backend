@@ -19,19 +19,10 @@ export async function setUsersToCache(users) {
   if (!redis || redis.status === "end") return;
   try {
     for (const user of users) {
-      redis.set(usersKey(user.userId), JSON.stringify(user));
+      setUserToCache(user.telegram_id, user);
     }
   } catch (err) {
     console.warn("⚠️ Redis setUsersToCache failed:", err.message);
-  }
-}
-
-export async function delUserCache(userId) {
-  if (!redis || redis.status === "end") return;
-  try {
-    await redis.del(usersKey(userId));
-  } catch (err) {
-    console.warn("⚠️ Redis delUserCache failed:", err.message);
   }
 }
 

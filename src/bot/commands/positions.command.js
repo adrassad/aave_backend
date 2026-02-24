@@ -1,6 +1,9 @@
 // src/bot/commands/positions.command.js
 import { Markup } from "telegraf";
-import { getUserWallets } from "../../services/wallet/wallet.service.js";
+import {
+  getUserWallets,
+  getUserWallet,
+} from "../../services/wallet/wallet.service.js";
 import { getWalletPositions } from "../../services/positions/position.service.js";
 import { assertCanViewPositions } from "../../services/subscription/subscription.service.js";
 import { formatPositionsOverview } from "../utils/formatPositionsOverview.js";
@@ -17,15 +20,28 @@ export function positionsCommand(bot) {
 
     const wallets = await getUserWallets(userId);
 
-    if (!wallets.length) {
+    if (!wallets.size) {
       return ctx.reply(
         "⚠️ У вас ещё нет кошельков. Добавьте через ➕ Add Wallet.",
       );
     }
 
-    const buttons = wallets.map((w) =>
-      Markup.button.callback(w.address, `wallet_positions:${w.id}`),
-    );
+    const buttons = [];
+
+    wallets.forEach((value, key) => {
+      buttons.push(
+        Markup.button.callback(
+          value.address,
+          `wallet_positions:${value.address}`,
+        ),
+      );
+    });
+
+    // for (const [value, key] of wallets) {
+    //   buttons.push(
+    //     Markup.button.callback(address, `wallet_positions:${wallet.id}`),
+    //   );
+    // }
 
     await ctx.reply(
       "💼 Выберите кошелек для просмотра позиций:",
@@ -33,14 +49,13 @@ export function positionsCommand(bot) {
     );
   });
 
-  bot.action(/wallet_positions:(\d+)/, async (ctx) => {
-    const walletId = Number(ctx.match[1]);
+  bot.action(/wallet_positions:(.+)/, async (ctx) => {
+    const address = ctx.match[1];
     const userId = ctx.from.id;
 
     await ctx.answerCbQuery(); // убираем "часики"
 
-    const wallets = await getUserWallets(userId);
-    const wallet = wallets.find((w) => w.id === walletId);
+    const wallet = await getUserWallet(userId, address);
 
     if (!wallet) {
       return ctx.reply("❌ Кошелек не найден");

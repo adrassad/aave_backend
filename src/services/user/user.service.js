@@ -9,9 +9,9 @@ export async function createIfNotExists(telegramId) {
   let user = await getUserCache(telegramId);
 
   if (!user) {
-    user = await db.users.findByTelegramId(telegramId);
+    user = await db.users.findById(telegramId);
     if (!user) {
-      user = await db.users.createUser(telegramId);
+      user = await db.users.create(telegramId);
     }
     await setUserToCache(telegramId, user);
   }
@@ -55,7 +55,7 @@ export async function getUserStatus(telegramId) {
 }
 
 export async function loadUsersToCache() {
-  const users = await db.users.getAllUsers();
+  const users = await db.users.findAll();
   for (const user of users) {
     await setUserToCache(user.telegram_id, user);
   }

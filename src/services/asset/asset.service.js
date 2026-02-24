@@ -30,7 +30,7 @@ export async function syncAssets() {
  */
 export async function upsertAssets(network_id, assets) {
   for (const a of assets) {
-    await db.assets.upsertAsset({
+    await db.assets.create({
       network_id: network_id,
       address: a.address,
       symbol: a.symbol,
@@ -60,7 +60,7 @@ export async function getAssetByAddress(networkId, address) {
 
 //Получить все assets
 export async function getAllAssets() {
-  return await db.assets.getAll();
+  return await db.assets.findAll();
 }
 
 export async function getAsset(networkId, addressOrSymbol) {
@@ -76,7 +76,7 @@ export async function loadAllAssetsToCache() {
 
 export async function loadAssetsToCache(network_id) {
   if (!network_id) return;
-  const assets = await db.assets.getByNetwork(network_id);
+  const assets = await db.assets.findByNetwork(network_id);
   const assetsByAddress = {};
   for (const asset of assets) {
     assetsByAddress[asset.address.toLowerCase()] = {

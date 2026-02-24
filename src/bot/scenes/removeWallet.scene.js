@@ -12,20 +12,21 @@ removeWalletScene.enter(async (ctx) => {
 
   const wallets = await getUserWallets(userId);
 
-  if (!wallets.length) {
+  if (!wallets.size) {
     await ctx.reply("❌ У вас нет кошельков");
     return ctx.scene.leave();
   }
 
+  const buttons = [];
+
+  wallets.forEach((value, key) => {
+    buttons.push(
+      Markup.button.callback(value.address, `WALLET_DELETE:${value.address}`),
+    );
+  });
+
   await ctx.reply(
-    "🗑 Выберите кошелёк для удаления:",
-    Markup.inlineKeyboard(
-      wallets.map((w) =>
-        Markup.button.callback(
-          `${w.label ?? w.address.slice(0, 6) + "..."}`,
-          `WALLET_DELETE:${w.id}`,
-        ),
-      ),
-    ),
+    "💼 Выберите кошелек для удаления:",
+    Markup.inlineKeyboard(buttons, { columns: 1 }),
   );
 });
