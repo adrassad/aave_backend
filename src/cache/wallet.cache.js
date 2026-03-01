@@ -39,6 +39,7 @@ export async function setWalletsToCache(userId, wallets) {
 
 // ------------------- Get wallets by user -------------------
 export async function getWalletsByUser(userId) {
+  console.log("getWalletsByUser redis.status:", redis.status);
   if (!redis || redis.status === "end") return new Map();
   try {
     const key = userWalletsKey(userId);
