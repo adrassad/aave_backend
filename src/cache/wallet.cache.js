@@ -43,6 +43,11 @@ export async function getWalletsByUser(userId) {
   try {
     const key = userWalletsKey(userId);
     const data = await redis.hgetall(key);
+    console.log("Redis connection:", {
+      host: redis.options?.socket?.host,
+      port: redis.options?.socket?.port,
+      db: redis.options?.database,
+    });
     console.log("getWalletsByUser", data);
     const map = new Map();
     for (const [address, walletJson] of Object.entries(data)) {
