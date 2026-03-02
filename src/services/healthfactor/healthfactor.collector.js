@@ -8,6 +8,7 @@ import {
   getUserWallet,
 } from "../wallet/wallet.service.js";
 import { calculateAndStoreHF } from "./healthfactor.core.js";
+import { extractUniqueAddresses } from "../wallet/wallet.utils.js";
 
 const CONCURRENCY = 5;
 
@@ -27,7 +28,7 @@ export async function collectHealthFactors({
   const networks = await getEnabledNetworks();
   const limit = pLimit(CONCURRENCY);
 
-  const resultMap = new Map();
+  let resultMap = new Map();
   const tasks = [];
 
   // 🟢 1. Определяем набор кошельков
@@ -41,7 +42,7 @@ export async function collectHealthFactors({
     wallets.set(wallet.address, [wallet]);
 
     // заранее создаем entry под userId
-    resultMap.set(userId, new Map());
+    resultMap.set(userId, wallets);
   } else if (userId) {
     const userWallets = await getUserWallets(userId);
 
@@ -52,52 +53,55 @@ export async function collectHealthFactors({
       }
       wallets.get(wallet.address).push(wallet);
     }
+    resultMap.set(userId, wallets);
   } else {
-    wallets = await getAllWallets();
+    resultMap = await getAllWallets();
+  }
+
+  const addresses = extractUniqueAddresses(resultMap);
+
+  const mapHF = new Map();
+
+  for (const address of addresses) {
+    const mNet = new Map();
+    for (const network of Object.values(networks)) {
+      const hfResult = await calculateAndStoreHF({
+        address,
+        network,
+        checkChange,
+      });
+      mNet.set(network.name, hfResult);
+    }
+    mapHF.set(address, mNet);
   }
 
   // 🟢 2. Сбор HF
-  for (const [address, records] of wallets.entries()) {
-    for (const record of records) {
+  //userId -> address -> network -> healthfactor
+  // 🟢 2. Сбор HF → Map(userId, Map(address, Map(network, hf)))
+
+  const finalResult = new Map();
+
+  for (const [uId, walletsMap] of resultMap.entries()) {
+    const userAddressMap = new Map();
+
+    for (const address of walletsMap.keys()) {
+      const networkMap = new Map();
+
       for (const network of Object.values(networks)) {
-        tasks.push(
-          limit(async () => {
-            try {
-              const hfResult = await calculateAndStoreHF({
-                address,
-                walletId: record.id,
-                userId: record.user_id ?? userId,
-                network,
-                checkChange,
-              });
+        const hfResult = await calculateAndStoreHF({
+          address,
+          network,
+          checkChange,
+        });
 
-              // Если checkChange=true и HF не изменился, пропускаем
-              if (checkChange && !hfResult.isChanged) return;
-
-              const targetUserId = userId ?? record.user_id;
-              if (!resultMap.has(targetUserId)) {
-                resultMap.set(targetUserId, new Map());
-              }
-
-              const walletMap = resultMap.get(targetUserId);
-              if (!walletMap.has(address)) {
-                walletMap.set(address, new Map());
-              }
-
-              walletMap.get(address).set(network.name, hfResult.healthfactor);
-            } catch (err) {
-              console.error(
-                `HF error: wallet=${address} network=${network.name}`,
-                err.message,
-              );
-            }
-          }),
-        );
+        networkMap.set(network.name, hfResult.healthfactor);
       }
+
+      userAddressMap.set(address, networkMap);
     }
+
+    finalResult.set(uId, userAddressMap);
   }
 
-  await Promise.allSettled(tasks);
-
-  return resultMap;
+  return finalResult;
 }

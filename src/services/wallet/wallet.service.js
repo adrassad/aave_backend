@@ -9,6 +9,7 @@ import {
   delWalletFromCache,
   getAllWalletsCache,
 } from "../../cache/wallet.cache.js";
+import { collectUsersWallets } from "./wallet.utils.js";
 
 function normalizeAddress(address) {
   return address.trim().toLowerCase();
@@ -119,55 +120,20 @@ export async function getAllWallets() {
   }
 
   // 2️⃣ Cache miss → DB
-  const result = await db.wallets.findAll();
-  const grouped = new Map();
-
-  for (const record of result) {
-    const { address, ...rest } = record;
-
-    if (!grouped.has(address)) {
-      grouped.set(address, []);
-    }
-
-    grouped.get(address).push(rest);
-  }
+  const walletsArray = Object.values(await db.wallets.findAll());
+  const walletsUsers = collectUsersWallets(walletsArray);
 
   // 3️⃣ Записываем в кеш
-  if (grouped.size > 0) {
-    await setAllWalletsToCache(grouped);
+  if (walletsUsers.size > 0) {
+    await setAllWalletsToCache(walletsUsers);
   }
 
-  return grouped;
+  return walletsUsers;
 }
 
 export async function loadWalletsToCache() {
   const walletsArray = Object.values(await db.wallets.findAll());
-  const result = new Map();
-
-  if (!Array.isArray(walletsArray) || walletsArray.length === 0) {
-    return result;
-  }
-
-  for (const wallet of walletsArray) {
-    const { id, user_id, address, label, created_at } = wallet;
-
-    if (!user_id || !address) continue;
-
-    // если у пользователя ещё нет Map — создаём
-    if (!result.has(user_id)) {
-      result.set(user_id, new Map());
-    }
-
-    const userWallets = result.get(user_id);
-
-    userWallets.set(address, {
-      id,
-      user_id,
-      address,
-      label,
-      created_at,
-    });
-  }
-  await setAllWalletsToCache(result);
+  const walletsUsers = collectUsersWallets(walletsArray);
+  await setAllWalletsToCache(walletsUsers);
   console.log("✅ Cached wallets:", walletsArray.length);
 }

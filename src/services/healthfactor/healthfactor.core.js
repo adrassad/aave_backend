@@ -4,15 +4,12 @@ import { getUserHealthFactor } from "../../blockchain/index.js";
 
 export async function calculateAndStoreHF({
   address,
-  walletId,
-  userId,
   network,
   checkChange = true, // 👈 важно
 }) {
   const rawHF = await getUserHealthFactor(network.name, "aave", address);
   if (rawHF == null)
     return {
-      userId,
       address,
       network: network.name,
       healthfactor: null,
@@ -25,7 +22,7 @@ export async function calculateAndStoreHF({
 
   if (checkChange) {
     isChanged = await db.hf.create({
-      wallet_id: walletId,
+      address: address,
       protocol: "aave",
       network_id: network.id,
       healthfactor,
@@ -33,7 +30,6 @@ export async function calculateAndStoreHF({
   }
 
   return {
-    userId,
     address,
     network: network.name,
     healthfactor,
