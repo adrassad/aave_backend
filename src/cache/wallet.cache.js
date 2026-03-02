@@ -94,6 +94,7 @@ export async function getAllWalletsCache() {
 
 // ------------------- Delete wallet -------------------
 export async function delWalletFromCache(userId, address) {
+  console.log("delWalletFromCache redis.status:", userId, redis.status);
   if (!redis || redis.status === "end") return;
   try {
     const key = userWalletsKey(userId);
@@ -105,6 +106,7 @@ export async function delWalletFromCache(userId, address) {
 
 // ------------------- Bulk set all wallets -------------------
 export async function setAllWalletsToCache(usersWalletsMap) {
+  console.log("setAllWalletsToCache redis.status:", userId, redis.status);
   if (!redis || redis.status === "end") return;
   if (!usersWalletsMap || usersWalletsMap.size === 0) return;
   try {
