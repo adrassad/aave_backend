@@ -11,13 +11,13 @@ export class HFRepository extends BaseRepository {
         : Number(data.healthfactor.toFixed(2));
     const { rowCount } = await this.db.query(
       `
-        INSERT INTO healthfactors (wallet_id, protocol, network_id, healthfactor)
+        INSERT INTO healthfactors (address, protocol, network_id, healthfactor)
         SELECT $1, $2, $3, $4
         WHERE NOT EXISTS (
           SELECT 1 FROM (
             SELECT healthfactor
             FROM healthfactors
-            WHERE wallet_id = $1
+            WHERE address = $1
               AND protocol = $2
               AND network_id = $3
             ORDER BY timestamp DESC
@@ -27,7 +27,7 @@ export class HFRepository extends BaseRepository {
         )
         RETURNING id;
         `,
-      [data.wallet_id, data.protocol, data.network_id, normalizedHF],
+      [data.address, data.protocol, data.network_id, normalizedHF],
     );
     return rowCount > 0;
   }

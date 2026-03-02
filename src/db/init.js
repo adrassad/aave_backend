@@ -126,9 +126,7 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS healthfactors (
       id SERIAL PRIMARY KEY,
 
-      wallet_id INTEGER NOT NULL
-        REFERENCES wallets(id)
-        ON DELETE CASCADE,
+      address TEXT NOT NULL,
 
       protocol TEXT NOT NULL,
 
@@ -144,12 +142,12 @@ export async function initDb() {
 
   await dbClient.query(`
     CREATE INDEX IF NOT EXISTS idx_hf_lookup
-    ON healthfactors(wallet_id, protocol, network_id, timestamp DESC);
+    ON healthfactors(address, protocol, network_id, timestamp DESC);
   `);
 
   await dbClient.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS uniq_hf_exact
-    ON healthfactors(wallet_id, protocol, network_id, timestamp);
+    ON healthfactors(address, protocol, network_id, timestamp);
   `);
 
   //
