@@ -34,8 +34,8 @@ export async function addUserWallet(telegramId, address, label = null) {
   }
 
   const wallet = await db.wallets.create({
-    telegramId,
-    normalizedAddress,
+    user_id: telegramId,
+    address: normalizedAddress,
     label,
   });
   let mapWallet = await getWalletsByUser(telegramId);
