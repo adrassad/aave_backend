@@ -83,24 +83,23 @@ export async function collectHealthFactors({
 
   for (const [uId, walletsMap] of resultMap.entries()) {
     const userAddressMap = new Map();
-
+    let hfIsChanged = false;
     for (const address of walletsMap.keys()) {
       const networkMap = new Map();
-
       for (const network of Object.values(networks)) {
-        const hfResult = await calculateAndStoreHF({
-          address,
-          network,
-          checkChange,
-        });
-
-        networkMap.set(network.name, hfResult.healthfactor);
+        const resultHF = mapHF.get(address)?.get(network.name);
+        if (resultHF && resultHF.isChanged) {
+          networkMap.set(network.name, resultHF.healthfactor);
+          hfIsChanged = true;
+        }
       }
-
-      userAddressMap.set(address, networkMap);
+      if (hfIsChanged) {
+        userAddressMap.set(address, networkMap);
+      }
     }
-
-    finalResult.set(uId, userAddressMap);
+    if (hfIsChanged) {
+      finalResult.set(uId, userAddressMap);
+    }
   }
 
   return finalResult;

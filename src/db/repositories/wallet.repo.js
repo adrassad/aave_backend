@@ -19,7 +19,7 @@ export class WalletRepository extends BaseRepository {
   }
 
   async deleteUserWallet(userId, address) {
-    const res = await db.query(
+    const res = await this.db.query(
       `
         DELETE FROM wallets
         WHERE address = $1 AND user_id = $2
@@ -31,7 +31,7 @@ export class WalletRepository extends BaseRepository {
   }
 
   async walletExists(userId, address) {
-    const res = await db.query(
+    const res = await this.db.query(
       `
         SELECT 1
         FROM wallets
