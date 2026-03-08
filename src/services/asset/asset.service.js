@@ -4,6 +4,7 @@ import {
   getAssetsByNetworkCache,
   setAssetsToCache,
   getAssetCache,
+  getAssetBySymbolCache,
 } from "../../cache/asset.cache.js";
 import { getAssets } from "../../blockchain/index.js";
 import { getEnabledNetworks } from "../network/network.service.js";
@@ -52,6 +53,24 @@ export async function getAssetByAddress(networkId, address) {
   if (!asset) return null;
 
   return asset;
+}
+
+export async function getAssetBySymbol(symbol) {
+  if (!symbol || typeof symbol !== "string") return null;
+
+  const normalizedAddress = symbol.toLowerCase();
+  const networks = Object.values(await getEnabledNetworks());
+
+  const netAsset = new Map();
+  await Promise.all(
+    networks.map(async (network) => {
+      const asset = await getAssetBySymbolCache(network.id, symbol);
+      if (asset) {
+        netAsset.set(network, asset);
+      }
+    }),
+  );
+  return netAsset;
 }
 
 //Получить все assets
