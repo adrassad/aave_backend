@@ -128,56 +128,58 @@ CRON3 --> HF
 
 REDIS --> API
 POSTGRES --> API
+```
 
 # 📦 Project Structure
+
 src
- ├── api
- │   └── routes
- │       ├── health.route.js
- │       ├── assets.route.js
- │       ├── price.route.js
- │       └── networks.route.js
- │
- ├── bot
- │   ├── commands
- │   ├── scenes
- │   ├── notifications
- │   └── locales
- │       ├── en.js
- │       └── ru.js
- │
- ├── services
- │   ├── asset
- │   │   └── asset.service.js
- │   ├── healthfactor
- │   │   └── healthfactor.service.js
- │   ├── network
- │   │   └── network.service.js
- │   ├── positions
- │   │   └── position.service.js
- │   ├── price
- │   │   └── price.service.js
- │   ├── subscription
- │   │   └── subscription.service.js
- │   ├── user
- │   │   └── user.service.js
- │   └── wallet
- │       └── wallet.service.js
- │
- ├── blockchain
- │   ├── adapters
- │   │   └── aave.adapter.js
- │   ├── abi
- │   └── providers
- │
- ├── workers
- │   ├── price.worker.js
- │   ├── assets.worker.js
- │   └── hf.worker.js
- │
- └── database
-     ├── postgres
-     └── redis
+├── api
+│ └── routes
+│ ├── health.route.js
+│ ├── assets.route.js
+│ ├── price.route.js
+│ └── networks.route.js
+│
+├── bot
+│ ├── commands
+│ ├── scenes
+│ ├── notifications
+│ └── locales
+│ ├── en.js
+│ └── ru.js
+│
+├── services
+│ ├── asset
+│ │ └── asset.service.js
+│ ├── healthfactor
+│ │ └── healthfactor.service.js
+│ ├── network
+│ │ └── network.service.js
+│ ├── positions
+│ │ └── position.service.js
+│ ├── price
+│ │ └── price.service.js
+│ ├── subscription
+│ │ └── subscription.service.js
+│ ├── user
+│ │ └── user.service.js
+│ └── wallet
+│ └── wallet.service.js
+│
+├── blockchain
+│ ├── adapters
+│ │ └── aave.adapter.js
+│ ├── abi
+│ └── providers
+│
+├── workers
+│ ├── price.worker.js
+│ ├── assets.worker.js
+│ └── hf.worker.js
+│
+└── database
+├── postgres
+└── redis
 
 # 🧩 Services
 
@@ -400,4 +402,3 @@ Wallet tracking and Health Factor calculations are performed internally by the b
 # 📜 License
 
 MIT
-```
