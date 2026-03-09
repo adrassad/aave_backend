@@ -1,44 +1,29 @@
-# Aave Risk Monitor Backend
+# AAVE Health Factor Bot
 
-Backend platform for monitoring DeFi lending positions and liquidation
-risk in **Aave Protocol** across multiple blockchain networks.
+Telegram bot and backend service for monitoring **AAVE positions and Health Factor** across multiple networks.
 
-The system collects on‑chain data, retrieves risk metrics directly from
-Aave smart contracts, stores analytics data, and sends notifications via
-a Telegram bot.
-
-Repository: https://github.com/adrassad/aave_backend
+The system tracks wallet positions, calculates risk metrics and sends notifications when a Health Factor approaches liquidation thresholds.
 
 ---
 
 # 🚀 Features
 
-• Multi‑chain Aave monitoring\
-• Health Factor tracking\
-• DeFi position analytics\
-• Telegram bot interface\
-• REST API\
-• Redis caching layer\
-• PostgreSQL storage\
-• Background jobs for indexing\
-• Modular protocol adapters
-
----
-
-# 🌐 Supported Networks
-
-Currently supported networks:
-
-- Ethereum
-- Arbitrum
-- Avalanche
-
-The architecture allows new networks to be added with minimal changes.
+- Track **AAVE positions**
+- Monitor **Health Factor**
+- Multi-network support
+- Real-time **price updates**
+- **Telegram notifications**
+- **PostgreSQL storage**
+- **Redis caching**
+- **Background workers**
+- **Localization (EN / RU)**
+- Public **REST API**
 
 ---
 
 # 🧠 System Architecture
 
+```mermaid
 flowchart TB
 
 %% USERS
@@ -57,6 +42,7 @@ end
 subgraph BOT["Bot Layer"]
 CMD["Command Handlers"]
 SCENES["Scenes / User Flows"]
+I18N["Localization (EN / RU)"]
 NOTIFY["Notification Service"]
 end
 
@@ -100,6 +86,7 @@ U2 --> API
 
 TG --> CMD
 CMD --> SCENES
+CMD --> I18N
 CMD --> NOTIFY
 
 CMD --> WS
@@ -142,244 +129,275 @@ CRON3 --> HF
 REDIS --> API
 POSTGRES --> API
 
----
+# 📦 Project Structure
+src
+ ├── api
+ │   └── routes
+ │       ├── health.route.js
+ │       ├── assets.route.js
+ │       ├── price.route.js
+ │       └── networks.route.js
+ │
+ ├── bot
+ │   ├── commands
+ │   ├── scenes
+ │   ├── notifications
+ │   └── locales
+ │       ├── en.js
+ │       └── ru.js
+ │
+ ├── services
+ │   ├── asset
+ │   │   └── asset.service.js
+ │   ├── healthfactor
+ │   │   └── healthfactor.service.js
+ │   ├── network
+ │   │   └── network.service.js
+ │   ├── positions
+ │   │   └── position.service.js
+ │   ├── price
+ │   │   └── price.service.js
+ │   ├── subscription
+ │   │   └── subscription.service.js
+ │   ├── user
+ │   │   └── user.service.js
+ │   └── wallet
+ │       └── wallet.service.js
+ │
+ ├── blockchain
+ │   ├── adapters
+ │   │   └── aave.adapter.js
+ │   ├── abi
+ │   └── providers
+ │
+ ├── workers
+ │   ├── price.worker.js
+ │   ├── assets.worker.js
+ │   └── hf.worker.js
+ │
+ └── database
+     ├── postgres
+     └── redis
 
-# 📊 Health Factor Monitoring
+# 🧩 Services
 
-Risk metrics are retrieved directly from **Aave smart contracts**.
+Asset Service
 
-The backend calls:
-
-    getUserAccountData(address user)
-
-Example ABI:
-
-```javascript
-const abi = [
-  "function getUserAccountData(address user) view returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)",
-];
-```
-
-Returned values:
-
-- total collateral
-- total debt
-- liquidation threshold
-- loan‑to‑value ratio
-- **health factor**
-
-Using the protocol's own calculation guarantees the monitoring system
-always matches the official Aave risk model.
-
----
-
-# ⚙️ Background Jobs
-
-The system includes cron workers responsible for updating system state.
-
-Workers:
-
-    priceUpdater
-    assetsUpdater
-    HFUpdater
+Manages asset metadata.
 
 Responsibilities:
 
-• update asset prices\
-• refresh token metadata\
-• recompute health factors
+asset list
 
----
+asset configuration
 
-# 💾 Caching Layer
+supported tokens
 
-Redis is used to cache frequently accessed data:
+decimals
 
-- metworks
-- assets
-- prices
-- ABIs
-- users
-- wallets
+collateral parameters
 
-Benefits:
+src/services/asset/asset.service.js
+Price Service
 
-• reduces blockchain RPC calls\
-• improves response time\
-• supports scaling
+Handles token price updates.
 
----
+Responsibilities:
 
-# 🗄 Database
+fetch prices
 
-Persistent storage is handled by **PostgreSQL**.
+normalize price data
 
-Repositories:
+cache prices in Redis
 
-    asset.repo
-    price.repo
-    wallet.repo
-    user.repo
-    network.repo
-    healthfactor.repo
+src/services/price/price.service.js
+Network Service
 
-The project uses a **repository pattern** to separate business logic
-from persistence.
+Manages supported blockchain networks.
 
----
+Responsibilities:
 
-# 🤖 Telegram Bot
+network configuration
 
-Users interact with the platform through a Telegram bot.
+RPC endpoints
 
-Commands:
+chain ids
 
-    /start
-    /help
-    /support
-    /positions
-    /healthfactor
-    /status
+src/services/network/network.service.js
+Wallet Service
 
-Capabilities:
+Handles wallet management.
 
-• add/remove wallets\
-• view DeFi positions\
-• monitor liquidation risk\
-• receive alerts
+Responsibilities:
 
----
+add wallet
 
-# 📁 Project Structure
+remove wallet
 
-    api/
-    bot/
-    blockchain/
-    cache/
-    config/
-    cron/
-    db/
-    redis/
-    services/
+validate wallet
 
-Core layers:
+link wallet to user
 
-- API
-- Services
-- Blockchain integration
-- Data storage
-- Cache
-- Notifications
+src/services/wallet/wallet.service.js
+User Service
 
----
+Handles user accounts.
 
-# 🛠 Tech Stack
+Responsibilities:
 
-Backend:
+create user
 
-- Node.js
-- PostgreSQL
-- Redis
+update preferences
 
-Blockchain:
+language settings
 
-- EVM RPC
-- Smart contract ABI
-- Protocol adapters
+src/services/user/user.service.js
+Positions Service
 
-Infrastructure:
+Fetches user positions from AAVE.
 
-- Telegram Bot API
-- Cron workers
-- Modular architecture
+Responsibilities:
 
----
+fetch reserves
 
-# 🔧 Installation
+calculate collateral
 
-Clone repository:
+calculate borrow positions
 
-    git clone https://github.com/adrassad/aave_backend.git
+src/services/positions/position.service.js
+HealthFactor Service
 
-Install dependencies:
+Calculates user liquidation risk.
 
-    npm install
+Responsibilities:
 
-Configure environment variables:
+compute Health Factor
 
-    .env
+detect liquidation risk
 
-Run the application:
+trigger alerts
 
-    npm start
+src/services/healthfactor/healthfactor.service.js
+Subscription Service
 
----
+Manages user subscription plans.
 
-# 🔑 Environment Variables
+Responsibilities:
 
-Example:
+free/pro plans
 
-PORT_API=
-BOT_TOKEN=
-DATABASE_URL=
-FLUSH_REDIS_ON_START=
-REDIS_HOST=
-REDIS_PORT=
-REDIS_DB=
-REDIS_PASSWORD=
-ADMIN_ID=
+wallet limits
 
-# Ethereum Mainnet
+notification limits
 
-ETHEREUM_RPC_URL=
-ETHEREUM_AAVE_ADDRESSES_PROVIDER=
-ETHEREUM_AAVE_POOL_DATA_PROVIDER=
-ETHEREUM_EXPLORER=
-ETHEREUM_EXPLORER_KEY=
+src/services/subscription/subscription.service.js
 
-# Arbitrum Mainnet
+# 🌍 Internationalization
 
-ARBITRUM_RPC_URL=
-ARBITRUM_AAVE_ADDRESSES_PROVIDER=
-ARBITRUM_AAVE_POOL_DATA_PROVIDER=
-ARBITRUM_EXPLORER=
-ARBITRUM_EXPLORER_KEY=
+The bot supports multiple languages.
 
-# Avalanche Mainnet
+Supported languages:
 
-AVALANCHE_RPC_URL=
-AVALANCHE_AAVE_ADDRESSES_PROVIDER=
-AVALANCHE_AAVE_POOL_DATA_PROVIDER=
-AVALANCHE_EXPLORER=
-AVALANCHE_EXPLORER_KEY=
+English
 
----
+Russian
 
-# 🗺 Roadmap
+Localization files are located in:
 
-Planned improvements:
+bot/locales/
+├── en.js
+└── ru.js
 
-• price lookup via Telegram bot\
-• price alerts\
-• additional DeFi protocol adapters\
-• portfolio analytics\
-• web dashboard
+Language is automatically detected from the Telegram user settings.
 
----
+# 🔌 Public API
 
-# 🤝 Contributing
+The backend exposes a small public API.
 
-Contributions are welcome.
+Health Check
+GET /health
 
-Possible improvements:
+Response:
 
-- new DeFi protocols
-- new networks
-- performance improvements
-- bot features
+OK
+Assets
+GET /assets
 
----
+Returns supported tokens.
+
+Prices
+GET /prices
+
+Returns current token prices.
+
+Networks
+GET /networks
+
+Returns supported blockchain networks.
+
+Sensitive user data such as:
+
+wallets
+
+positions
+
+health factors
+
+is not publicly exposed and is only accessed internally by the Telegram bot.
+
+# ⚙️ Background Workers
+
+Workers update blockchain and market data.
+
+Price Worker
+
+Updates token prices.
+
+src/workers/price.worker.js
+Assets Worker
+
+Updates asset metadata.
+
+src/workers/assets.worker.js
+Health Factor Worker
+
+Recalculates Health Factors for tracked wallets.
+
+src/workers/hf.worker.js
+
+# 🗄 Storage
+
+PostgreSQL
+
+Stores:
+
+users
+
+wallets
+
+assets
+
+positions
+
+subscriptions
+
+Redis
+
+Used for:
+
+price caching
+
+fast reads
+
+temporary blockchain data
+
+# 🔐 Security
+
+Sensitive user information is not exposed through public APIs.
+
+Wallet tracking and Health Factor calculations are performed internally by the bot.
 
 # 📜 License
 
 MIT
+```
