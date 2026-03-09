@@ -1,52 +1,51 @@
 # AAVE Health Factor Bot
 
-Telegram bot and backend service for monitoring **AAVE positions and Health Factor** across multiple networks.
+A **Telegram bot and backend service** for monitoring **AAVE lending
+positions and Health Factor risk** across multiple blockchain networks.
 
-The system tracks wallet positions, calculates risk metrics and sends notifications when a Health Factor approaches liquidation thresholds.
+The system tracks user wallets, analyzes collateral and borrow
+positions, calculates liquidation risk, and sends **Telegram
+notifications** when a Health Factor approaches critical thresholds.
 
----
+------------------------------------------------------------------------
 
 # 🚀 Features
 
-- Track **AAVE positions**
-- Monitor **Health Factor**
-- Multi-network support
-- Real-time **price updates**
-- **Telegram notifications**
-- **PostgreSQL storage**
-- **Redis caching**
-- **Background workers**
-- **Localization (EN / RU)**
-- Public **REST API**
+-   Monitor **AAVE lending positions**
+-   Track **Health Factor** and liquidation risk
+-   **Multi‑network support**
+-   Real‑time **token price updates**
+-   **Telegram notifications**
+-   **PostgreSQL** persistent storage
+-   **Redis** caching layer
+-   **Background workers**
+-   **Localization (EN / RU)**
+-   Public **REST API**
 
----
+------------------------------------------------------------------------
 
 # 🧠 System Architecture
 
-```mermaid
+``` mermaid
 flowchart TB
 
-%% USERS
 subgraph USERS["Users"]
 U1["Telegram User"]
 U2["External API Client"]
 end
 
-%% ENTRY LAYER
 subgraph ENTRY["Entry Layer"]
 TG["Telegram Bot"]
 API["REST API"]
 end
 
-%% BOT INTERNAL
 subgraph BOT["Bot Layer"]
 CMD["Command Handlers"]
 SCENES["Scenes / User Flows"]
-I18N["Localization (EN / RU)"]
+I18N["Localization"]
 NOTIFY["Notification Service"]
 end
 
-%% DOMAIN SERVICES
 subgraph DOMAIN["Domain Services"]
 US["User Service"]
 WS["Wallet Service"]
@@ -58,28 +57,23 @@ HF["HealthFactor Service"]
 SUB["Subscription Service"]
 end
 
-%% BLOCKCHAIN
 subgraph BC["Blockchain Integration"]
-ADAPTER["Protocol Adapter (Aave)"]
+ADAPTER["AAVE Adapter"]
 ABI["ABI Registry"]
 RPC["RPC Providers"]
 CONTRACT["Smart Contract Calls"]
 end
 
-%% DATA
 subgraph DATA["Data Layer"]
 POSTGRES["PostgreSQL"]
-REDIS["Redis Cache"]
+REDIS["Redis"]
 end
 
-%% WORKERS
 subgraph WORKERS["Background Workers"]
-CRON1["Price Updater"]
-CRON2["Assets Updater"]
-CRON3["HF Updater"]
+CRON1["Price Worker"]
+CRON2["Assets Worker"]
+CRON3["HealthFactor Worker"]
 end
-
-%% FLOWS
 
 U1 --> TG
 U2 --> API
@@ -130,169 +124,191 @@ REDIS --> API
 POSTGRES --> API
 ```
 
+------------------------------------------------------------------------
+
 # 📦 Project Structure
 
-src
-├── api
-│ └── routes
-│ ├── health.route.js
-│ ├── assets.route.js
-│ ├── price.route.js
-│ └── networks.route.js
-│
-├── bot
-│ ├── commands
-│ ├── scenes
-│ ├── notifications
-│ └── locales
-│ ├── en.js
-│ └── ru.js
-│
-├── services
-│ ├── asset
-│ │ └── asset.service.js
-│ ├── healthfactor
-│ │ └── healthfactor.service.js
-│ ├── network
-│ │ └── network.service.js
-│ ├── positions
-│ │ └── position.service.js
-│ ├── price
-│ │ └── price.service.js
-│ ├── subscription
-│ │ └── subscription.service.js
-│ ├── user
-│ │ └── user.service.js
-│ └── wallet
-│ └── wallet.service.js
-│
-├── blockchain
-│ ├── adapters
-│ │ └── aave.adapter.js
-│ ├── abi
-│ └── providers
-│
-├── workers
-│ ├── price.worker.js
-│ ├── assets.worker.js
-│ └── hf.worker.js
-│
-└── database
-├── postgres
-└── redis
+    src
+    ├── api
+    │   └── routes
+    │       ├── health.route.js
+    │       ├── assets.route.js
+    │       ├── price.route.js
+    │       └── networks.route.js
+    │
+    ├── bot
+    │   ├── commands
+    │   ├── scenes
+    │   ├── notifications
+    │   └── locales
+    │       ├── en.js
+    │       └── ru.js
+    │
+    ├── services
+    │   ├── asset
+    │   │   └── asset.service.js
+    │   ├── healthfactor
+    │   │   └── healthfactor.service.js
+    │   ├── network
+    │   │   └── network.service.js
+    │   ├── positions
+    │   │   └── position.service.js
+    │   ├── price
+    │   │   └── price.service.js
+    │   ├── subscription
+    │   │   └── subscription.service.js
+    │   ├── user
+    │   │   └── user.service.js
+    │   └── wallet
+    │       └── wallet.service.js
+    │
+    ├── blockchain
+    │   ├── adapters
+    │   │   └── aave.adapter.js
+    │   ├── abi
+    │   └── providers
+    │
+    ├── workers
+    │   ├── price.worker.js
+    │   ├── assets.worker.js
+    │   └── hf.worker.js
+    │
+    └── database
+        ├── postgres
+        └── redis
 
-# 🧩 Services
+------------------------------------------------------------------------
 
-Asset Service
+# 🧩 Core Services
 
-Manages asset metadata.
+## Asset Service
 
-Responsibilities:
-
-asset list
-
-asset configuration
-
-supported tokens
-
-decimals
-
-collateral parameters
-
-src/services/asset/asset.service.js
-Price Service
-
-Handles token price updates.
+Manages **asset metadata and configuration**.
 
 Responsibilities:
 
-fetch prices
+-   Maintain supported asset list
+-   Store token metadata
+-   Manage decimals and collateral parameters
 
-normalize price data
+Path:
 
-cache prices in Redis
+    src/services/asset/asset.service.js
 
-src/services/price/price.service.js
-Network Service
+------------------------------------------------------------------------
 
-Manages supported blockchain networks.
+## Price Service
 
-Responsibilities:
-
-network configuration
-
-RPC endpoints
-
-chain ids
-
-src/services/network/network.service.js
-Wallet Service
-
-Handles wallet management.
+Handles **token price updates**.
 
 Responsibilities:
 
-add wallet
+-   Fetch market prices
+-   Normalize price data
+-   Cache prices in Redis
 
-remove wallet
+Path:
 
-validate wallet
+    src/services/price/price.service.js
 
-link wallet to user
+------------------------------------------------------------------------
 
-src/services/wallet/wallet.service.js
-User Service
+## Network Service
 
-Handles user accounts.
-
-Responsibilities:
-
-create user
-
-update preferences
-
-language settings
-
-src/services/user/user.service.js
-Positions Service
-
-Fetches user positions from AAVE.
+Manages **supported blockchain networks**.
 
 Responsibilities:
 
-fetch reserves
+-   Network configuration
+-   RPC endpoints
+-   Chain IDs
 
-calculate collateral
+Path:
 
-calculate borrow positions
+    src/services/network/network.service.js
 
-src/services/positions/position.service.js
-HealthFactor Service
+------------------------------------------------------------------------
 
-Calculates user liquidation risk.
+## Wallet Service
 
-Responsibilities:
-
-compute Health Factor
-
-detect liquidation risk
-
-trigger alerts
-
-src/services/healthfactor/healthfactor.service.js
-Subscription Service
-
-Manages user subscription plans.
+Handles **wallet management**.
 
 Responsibilities:
 
-free/pro plans
+-   Add wallet
+-   Remove wallet
+-   Validate wallet format
+-   Link wallet to user
 
-wallet limits
+Path:
 
-notification limits
+    src/services/wallet/wallet.service.js
 
-src/services/subscription/subscription.service.js
+------------------------------------------------------------------------
+
+## User Service
+
+Manages **user accounts and preferences**.
+
+Responsibilities:
+
+-   Create user
+-   Update preferences
+-   Store language settings
+
+Path:
+
+    src/services/user/user.service.js
+
+------------------------------------------------------------------------
+
+## Positions Service
+
+Fetches **user lending positions from AAVE**.
+
+Responsibilities:
+
+-   Fetch reserves
+-   Calculate collateral
+-   Calculate borrow positions
+
+Path:
+
+    src/services/positions/position.service.js
+
+------------------------------------------------------------------------
+
+## HealthFactor Service
+
+Calculates **liquidation risk**.
+
+Responsibilities:
+
+-   Compute Health Factor
+-   Detect liquidation risk
+-   Trigger alerts
+
+Path:
+
+    src/services/healthfactor/healthfactor.service.js
+
+------------------------------------------------------------------------
+
+## Subscription Service
+
+Manages **user subscription plans**.
+
+Responsibilities:
+
+-   Free / Pro plans
+-   Wallet limits
+-   Notification limits
+
+Path:
+
+    src/services/subscription/subscription.service.js
+
+------------------------------------------------------------------------
 
 # 🌍 Internationalization
 
@@ -300,104 +316,122 @@ The bot supports multiple languages.
 
 Supported languages:
 
-English
+-   English
+-   Russian
 
-Russian
+Localization files:
 
-Localization files are located in:
+    src/bot/locales
+    ├── en.js
+    └── ru.js
 
-bot/locales/
-├── en.js
-└── ru.js
+Language is automatically detected from **Telegram user settings**.
 
-Language is automatically detected from the Telegram user settings.
+------------------------------------------------------------------------
 
 # 🔌 Public API
 
-The backend exposes a small public API.
+The backend exposes a small **public REST API**.
 
-Health Check
-GET /health
+## Health Check
+
+    GET /health
 
 Response:
 
-OK
-Assets
-GET /assets
+    OK
 
-Returns supported tokens.
+------------------------------------------------------------------------
 
-Prices
-GET /prices
+## Assets
 
-Returns current token prices.
+    GET /assets
 
-Networks
-GET /networks
+Returns the list of **supported tokens**.
 
-Returns supported blockchain networks.
+------------------------------------------------------------------------
+
+## Prices
+
+    GET /prices
+
+Returns current **token prices**.
+
+------------------------------------------------------------------------
+
+## Networks
+
+    GET /networks
+
+Returns supported **blockchain networks**.
+
+------------------------------------------------------------------------
 
 Sensitive user data such as:
 
-wallets
+-   wallets
+-   positions
+-   health factors
 
-positions
+is **not publicly exposed** and is only used internally by the Telegram
+bot.
 
-health factors
-
-is not publicly exposed and is only accessed internally by the Telegram bot.
+------------------------------------------------------------------------
 
 # ⚙️ Background Workers
 
-Workers update blockchain and market data.
+Workers continuously update blockchain and market data.
 
-Price Worker
+## Price Worker
 
 Updates token prices.
 
-src/workers/price.worker.js
-Assets Worker
+    src/workers/price.worker.js
+
+## Assets Worker
 
 Updates asset metadata.
 
-src/workers/assets.worker.js
-Health Factor Worker
+    src/workers/assets.worker.js
+
+## Health Factor Worker
 
 Recalculates Health Factors for tracked wallets.
 
-src/workers/hf.worker.js
+    src/workers/hf.worker.js
+
+------------------------------------------------------------------------
 
 # 🗄 Storage
 
-PostgreSQL
+## PostgreSQL
 
 Stores:
 
-users
+-   users
+-   wallets
+-   assets
+-   positions
+-   subscriptions
 
-wallets
-
-assets
-
-positions
-
-subscriptions
-
-Redis
+## Redis
 
 Used for:
 
-price caching
+-   price caching
+-   fast reads
+-   temporary blockchain data
 
-fast reads
-
-temporary blockchain data
+------------------------------------------------------------------------
 
 # 🔐 Security
 
-Sensitive user information is not exposed through public APIs.
+Sensitive user information is **never exposed via public APIs**.
 
-Wallet tracking and Health Factor calculations are performed internally by the bot.
+Wallet tracking and Health Factor calculations are performed
+**internally by the bot services**.
+
+------------------------------------------------------------------------
 
 # 📜 License
 
