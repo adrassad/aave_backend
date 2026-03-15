@@ -19,7 +19,7 @@ export async function setUsersToCache(users) {
   if (!redis || redis.status === "end") return;
   try {
     for (const user of users) {
-      setUserToCache(user.telegram_id, user);
+      setUserToCache(user.id, user);
     }
   } catch (err) {
     console.warn("⚠️ Redis setUsersToCache failed:", err.message);

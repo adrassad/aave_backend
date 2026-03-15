@@ -9,6 +9,7 @@ export async function initDb() {
   await dbClient.query(`
     CREATE TABLE IF NOT EXISTS users (
       telegram_id BIGINT PRIMARY KEY,
+      name TEXT,
       subscription_level TEXT NOT NULL DEFAULT 'free',
       subscription_end TIMESTAMPTZ
     );

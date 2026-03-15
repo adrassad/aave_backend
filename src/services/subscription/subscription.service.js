@@ -1,4 +1,4 @@
-import { getUserStatus, isPro } from '../user/user.service.js';
+import { getUserStatus, isPro, updateUser } from "../user/user.service.js";
 
 const FREE_WALLETS_LIMIT = 1;
 const PRO_WALLETS_LIMIT = 10;
@@ -16,14 +16,12 @@ async function assertSubscriptionActive(userId) {
 
   // подписка не активирована
   if (!status || !status.subscriptionEnd) {
-    throw new Error('SUBSCRIPTION_REQUIRED');
+    throw new Error("SUBSCRIPTION_REQUIRED");
   }
 
   // подписка истекла
   if (status.subscriptionEnd <= new Date()) {
-    throw new Error(
-      pro ? 'PRO_SUBSCRIPTION_EXPIRED' : 'FREE_PERIOD_EXPIRED'
-    );
+    throw new Error(pro ? "PRO_SUBSCRIPTION_EXPIRED" : "FREE_PERIOD_EXPIRED");
   }
 
   return { pro };
@@ -45,8 +43,16 @@ export async function assertCanAddWallet(userId, walletCount) {
   const limit = pro ? PRO_WALLETS_LIMIT : FREE_WALLETS_LIMIT;
 
   if (walletCount >= limit) {
-    throw new Error(
-      pro ? 'PRO_LIMIT_REACHED' : 'FREE_LIMIT_REACHED'
-    );
+    throw new Error(pro ? "PRO_LIMIT_REACHED" : "FREE_LIMIT_REACHED");
   }
+}
+
+export async function upgradeToPro(user_id) {
+  let date = new Date(); // Текущая дата
+  date.setDate(date.getDate() + 30);
+  const user = updateUser(user_id, {
+    subscription_level: "pro",
+    subscription_end: date,
+  });
+  return user;
 }

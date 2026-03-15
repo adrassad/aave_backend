@@ -33,7 +33,7 @@ export function startCommand(bot) {
     if (ctx.scene?.current) {
       await ctx.scene.leave();
     }
-    await createIfNotExists(ctx.from.id);
+    await createIfNotExists(ctx.from);
 
     await ctx.reply(
       lanhuage(ctx.from.language_code, "start_welcome"),

@@ -5,15 +5,31 @@ import { setUserToCache, getUserCache } from "../../cache/user.cache.js";
 /**
  * Создать пользователя, если его нет
  */
-export async function createIfNotExists(telegramId) {
-  let user = await getUserCache(telegramId);
+export async function createIfNotExists(user_data) {
+  let user = await getUserCache(user_data.id);
 
   if (!user) {
-    user = await db.users.findById(telegramId);
+    user = await db.users.findById(user_data.id);
     if (!user) {
-      user = await db.users.create(telegramId);
+      user = await db.users.create(user_data);
+    } else {
+      user = await db.users.update(user_data.id, {
+        name: user_data.username,
+        first_name: user_data.first_name,
+        last_name: user_data.last_name,
+      });
     }
-    await setUserToCache(telegramId, user);
+    await setUserToCache(user);
+  } else {
+    user = await db.users.update(user_data.id, {
+      name: user_data.username,
+      first_name: user_data.first_name,
+      last_name: user_data.last_name,
+    });
+    if (!user) {
+      user = await db.users.create(user_data);
+    }
+    await setUserToCache(user);
   }
 
   return user;
@@ -63,4 +79,10 @@ export async function loadUsersToCache() {
   for (const user of users) {
     await setUserToCache(user.telegram_id, user);
   }
+}
+
+export async function updateUser(user_id, user_data) {
+  const user = await db.users.updateUser(user_id, user_data);
+  setUserToCache(user_id, user);
+  return user;
 }
