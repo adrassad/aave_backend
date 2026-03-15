@@ -5,6 +5,7 @@ import { statusCommand } from "./status.command.js";
 import { positionsCommand } from "./positions.command.js";
 import { healthFactorCommand } from "./healthfactor.command.js";
 import { supportCommand } from "./support.command.js";
+import { upgradeToProCommand } from "./upgradetopro.command.js";
 
 export function registerCommands(bot) {
   startCommand(bot);
@@ -13,4 +14,5 @@ export function registerCommands(bot) {
   positionsCommand(bot);
   healthFactorCommand(bot);
   supportCommand(bot);
+  upgradeToProCommand(bot);
 }

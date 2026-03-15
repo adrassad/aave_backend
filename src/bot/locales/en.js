@@ -38,6 +38,7 @@ export default {
   command_show_positions: "💼 Select a wallet to view positions:",
 
   // Support
+  admin_enter: "Enter user_id for upgrade to pro\n\nTo cancel send /cancel",
   support_enter: "✍️ Write your message to support.\n\nTo cancel send /cancel",
   support_canceled: "❌ Message sending canceled.",
   support_sent: "✅ Your message has been sent to support.",
@@ -79,9 +80,10 @@ export default {
   wallet_added: "✅ Wallet successfully added",
 
   // Subscription status
-  subscribe_status: "📊 Subscription status\n\n",
+  subscribe_status: "✨ Subscription status",
   subscribe_type: "Type:",
   subscribe_rules: "Access until:",
+  subscribe_upgrade_to_pro: "✅ You have renewed your Pro subscription.",
 
   // Healthfactor
   healthfactor_overview: "🛡 Your current Health Factor:",

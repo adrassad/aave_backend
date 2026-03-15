@@ -37,6 +37,8 @@ export default {
   command_show_positions: "💼 Выберите кошелек для просмотра позиций:",
 
   // Поддержка
+  admin_enter:
+    "Введите user_id для апгрейда до pro\n\nДля отмены нажмите /cancel",
   support_enter:
     "✍️ Напишите ваше сообщение в поддержку.\n\nДля отмены отправьте /cancel",
   support_canceled: "❌ Отправка сообщения отменена.",
@@ -79,9 +81,10 @@ export default {
   wallet_added: "✅ Кошелёк успешно добавлен",
 
   //Статус подписки
-  subscribe_status: "📊 Статус подписки\n\n",
+  subscribe_status: "✨ Статус подписки",
   subscribe_type: "Тип:",
   subscribe_rules: "Доступ до:",
+  subscribe_upgrade_to_pro: "✅ Вы продлили pro-подписку.",
 
   // Healthfactor
   healthfactor_overview: "🛡 Ваш текущий Health Factor:",
