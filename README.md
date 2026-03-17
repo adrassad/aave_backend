@@ -4,8 +4,8 @@ A **Telegram bot and backend service** for monitoring **AAVE lending
 positions and Health Factor risk** across EVM-compatible blockchain
 networks.
 
-The system provides **read-only wallet tracking**, calculates **Health
-Factor**, monitors **price changes**, and sends **Telegram
+The system provides **read-only wallet tracking**, track **Health
+Factor** and liquidation risk, monitors **price changes**, and sends **Telegram
 notifications** when risk conditions are met.
 
 ---
@@ -29,15 +29,17 @@ notifications** when risk conditions are met.
 
 ## 📌 Overview
 
-This project is a **modular layered backend** designed for monitoring
-DeFi lending positions in AAVE.
+This project is a **modular layered backend** for monitoring DeFi lending positions in AAVE.
 
-It integrates:
+It combines:
 
 - Telegram bot (user interaction)
-- REST API (external access)
-- Blockchain adapters (data fetching)
+- REST API (public endpoints)
+- Blockchain adapter (AAVE integration)
 - Background workers (data updates)
+- Redis cache (fast reads)
+
+The system is designed for **continuous monitoring**, not transaction execution.
 
 ---
 
@@ -55,7 +57,10 @@ It integrates:
 - **Redis** caching layer
 - **Background workers**
 - **Localization (EN / RU)**
-- Public **REST API**
+- Public REST API:
+  - `/prices`
+  - `/assets`
+  - `/networks`
 
 ---
 
@@ -69,7 +74,7 @@ flowchart TB
 
 subgraph USERS["Users"]
 U1["Telegram User"]
-U2["External API Client"]
+U2["API Client"]
 end
 
 subgraph ENTRY["Entry Layer"]
@@ -77,53 +82,34 @@ TG["Telegram Bot"]
 API["REST API"]
 end
 
-subgraph BOT["Bot Layer"]
-CMD["Command Handlers"]
-SCENES["Scenes / User Flows"]
-I18N["Localization"]
-NOTIFY["Notification Service"]
-end
-
-subgraph DOMAIN["Domain Services"]
+subgraph SERVICES["Services Layer"]
 US["User Service"]
 WS["Wallet Service"]
-AS["Asset Service"]
-NS["Network Service"]
 PS["Price Service"]
+AS["Asset Service"]
 POS["Positions Service"]
 HF["HealthFactor Service"]
+NS["Network Service"]
 SUB["Subscription Service"]
 end
 
-subgraph BC["Blockchain Integration"]
+subgraph BLOCKCHAIN["Blockchain Layer"]
 ADAPTER["AAVE Adapter"]
-ABI["ABI Registry"]
 RPC["RPC Providers"]
-CONTRACT["Smart Contract Calls"]
+POOL["AAVE Pool / getUserAccountData"]
 end
 
 subgraph DATA["Data Layer"]
-POSTGRES["PostgreSQL"]
-REDIS["Redis"]
-end
-
-subgraph WORKERS["Background Workers"]
-CRON1["Price Worker"]
-CRON2["Assets Worker"]
-CRON3["HealthFactor Worker"]
+PG["PostgreSQL"]
+RD["Redis"]
 end
 
 U1 --> TG
 U2 --> API
 
-TG --> CMD
-CMD --> SCENES
-CMD --> I18N
-CMD --> NOTIFY
-
-CMD --> WS
-CMD --> POS
-CMD --> HF
+TG --> WS
+TG --> POS
+TG --> HF
 
 API --> US
 API --> WS
@@ -136,31 +122,30 @@ API --> SUB
 
 POS --> ADAPTER
 HF --> ADAPTER
-
-ADAPTER --> ABI
 ADAPTER --> RPC
-RPC --> CONTRACT
+RPC --> POOL
 
-CONTRACT --> POSTGRES
+US --> PG
+WS --> PG
+AS --> PG
+NS --> PG
+SUB --> PG
 
-US --> POSTGRES
-WS --> POSTGRES
-AS --> POSTGRES
-NS --> POSTGRES
-PS --> POSTGRES
-SUB --> POSTGRES
-
-PS --> REDIS
-AS --> REDIS
-HF --> REDIS
-
-CRON1 --> PS
-CRON2 --> AS
-CRON3 --> HF
-
-REDIS --> API
-POSTGRES --> API
+PS --> RD
+AS --> RD
+HF --> RD
 ```
+
+---
+
+## 📦 Project Structure
+
+src
+├── api
+├── bot
+├── services
+├── blockchain
+└── database
 
 ---
 
@@ -192,7 +177,7 @@ POSTGRES --> API
 ### User Service
 
 - Manage users
-- Store preferences and language
+- Stores user data and preferences
 
 ### Positions Service
 
