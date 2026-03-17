@@ -23,7 +23,7 @@ notifications** when risk conditions are met.
 - [Cron Jobs](#-cron-jobs)
 - [Storage](#-storage)
 - [Security](#-security)
-- [Limitations](#-limitations)
+- [Future Improvements](#-future-improvements)
 - [License](#-license)
 
 ---
@@ -256,13 +256,15 @@ CACHE --> REDIS
 
 ## 📦 Project Structure
 
+```
 src
-├── api
-├── bot
-├── services
-├── blockchain
-├── cron
-└── database
+├── api # REST API routes
+├── bot # Telegram bot logic
+├── services # Business logic layer
+├── blockchain # AAVE adapter and RPC integration
+├── cron # Scheduled jobs (prices, assets, HF)
+└── database # PostgreSQL and Redis setup
+```
 
 ---
 
@@ -399,12 +401,12 @@ HFUpdater.cron.js — updates Health Factor data
 
 ---
 
-⚠️ Limitations
+## Future Improvements
 
-- Polling-based updates (cron jobs, no event system)
-- No queue system (BullMQ / RabbitMQ)
-- Limited RPC failover handling
-- Data freshness depends on RPC providers
+- Add RPC failover and retry policies for higher availability
+- Introduce a queue for scalable alert processing if notification volume grows
+- Improve observability with structured logs and metrics
+- Tune cron frequency based on target alert latency
 
 ---
 
