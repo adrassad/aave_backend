@@ -24,6 +24,7 @@ notifications** when risk conditions are met.
 - [Storage](#-storage)
 - [Security](#-security)
 - [Future Improvements](#-future-improvements)
+- [Internal Logic](#-internal-logic)
 - [License](#-license)
 
 ---
@@ -407,6 +408,19 @@ HFUpdater.cron.js — updates Health Factor data
 - Introduce a queue for scalable alert processing if notification volume grows
 - Improve observability with structured logs and metrics
 - Tune cron frequency based on target alert latency
+
+---
+
+## 🔒 Internal Logic
+
+Some internal components of the system are not included in this repository.
+
+This includes parts of:
+
+- subscription management
+- alerting rules and thresholds
+
+These components are intentionally kept private as part of the production deployment.
 
 ---
 
