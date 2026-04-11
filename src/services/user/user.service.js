@@ -19,7 +19,7 @@ export async function createIfNotExists(user_data) {
       user = await db.users.create(user_data);
     } else {
       user = await db.users.update(user_data.id, {
-        name: user_data.username,
+        username: user_data.username,
         first_name: user_data.first_name,
         last_name: user_data.last_name,
       });
@@ -27,7 +27,7 @@ export async function createIfNotExists(user_data) {
     await setUserToCache(user);
   } else {
     user = await db.users.update(user_data.id, {
-      name: user_data.username,
+      username: user_data.username,
       first_name: user_data.first_name,
       last_name: user_data.last_name,
     });
