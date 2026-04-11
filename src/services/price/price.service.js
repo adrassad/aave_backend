@@ -10,7 +10,7 @@ export async function syncPrices() {
   const networks = await getEnabledNetworks();
   for (const network of Object.values(networks)) {
     console.log(`Price 🔗${network.name} `, network.id);
-    const lastPrices = await loadLastPricesToCacheNyNetwork(network.id);
+    const lastPrices = await loadLastPricesToCacheByNetwork(network.id);
     const assets = await getAddressAssetsByNetwork(network.id);
     const prices = await getPrices(network.name, "aave", Object.values(assets));
     for (const price of Object.values(prices)) {
@@ -55,11 +55,11 @@ function diffPercent(oldPrice, newPrice) {
 export async function loadLastPricesToCache() {
   const networks = Object.values(await getEnabledNetworks());
   for (const network of networks) {
-    await loadLastPricesToCacheNyNetwork(network.id);
+    await loadLastPricesToCacheByNetwork(network.id);
   }
 }
 
-export async function loadLastPricesToCacheNyNetwork(network_id) {
+export async function loadLastPricesToCacheByNetwork(network_id) {
   if (!network_id) return;
   const pricesDb = await db.prices.getLastPricesByNetwork(network_id);
   const prices = {};
@@ -128,6 +128,10 @@ export async function savePriceIfChanged(network, asset, priceUsd) {
       priceUsd: priceUsd,
     });
   } catch (e) {
-    console.error(`❌ Failed to save price for ${asset.id}:`, e);
+    console.error(
+      `❌ Failed to save price for ${asset.id}:`,
+      new Date().toISOString(),
+      e,
+    );
   }
 }

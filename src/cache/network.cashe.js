@@ -27,7 +27,11 @@ export async function getNetworkCache(networkId) {
     const raw = await redis.get(key);
     return raw ? JSON.parse(raw) : {};
   } catch (err) {
-    console.error("❌ getAssetsByNetworkCache failed:", err.message);
+    console.error(
+      "❌ getAssetsByNetworkCache failed:",
+      new Date().toISOString(),
+      err.message,
+    );
     return {};
   }
 }

@@ -26,7 +26,9 @@ redis.on("connect", () =>
 redis.on("ready", () =>
   console.log("✅ Redis ready", new Date().toISOString(), "DB:", REDIS_DB),
 );
-redis.on("error", (err) => console.error("🔴 Redis error:", err.message));
+redis.on("error", (err) =>
+  console.error("🔴 Redis error:", new Date().toISOString(), err.message),
+);
 redis.on("close", () => console.warn("⚠️ Redis connection closed"));
 redis.on("reconnecting", () =>
   console.log("🔄 Redis reconnecting...", new Date().toISOString()),
@@ -52,6 +54,10 @@ export async function connectRedis() {
       console.log(`✅ Redis cache cleared (keys after flush: ${after})`);
     }
   } catch (err) {
-    console.error("⚠️ Redis connect failed:", err.message);
+    console.error(
+      "⚠️ Redis connect failed:",
+      new Date().toISOString(),
+      err.message,
+    );
   }
 }

@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
     const networks = await getEnabledNetworks(); // ждём результат
     res.json(networks);
   } catch (e) {
-    console.error("❌ Failed to get networks:", e);
+    console.error("❌ Failed to get networks:", new Date().toISOString(), e);
     res.status(500).json({ error: "Failed to get networks" });
   }
 });

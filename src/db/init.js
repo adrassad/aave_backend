@@ -11,7 +11,8 @@ export async function initDb() {
       telegram_id BIGINT PRIMARY KEY,
       name TEXT,
       subscription_level TEXT NOT NULL DEFAULT 'free',
-      subscription_end TIMESTAMPTZ
+      subscription_end TIMESTAMPTZ,
+      threshold_hf NUMERIC(10, 2) DEFAULT 1.2
     );
   `);
 

@@ -60,6 +60,7 @@ export async function collectPositions({ userId = null, walletId = null }) {
             } catch (err) {
               console.error(
                 `Positions error: wallet=${address} network=${network.name}`,
+                new Date().toISOString(),
                 err.message,
               );
             }

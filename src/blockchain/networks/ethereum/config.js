@@ -1,10 +1,10 @@
-// src/blockchain/networks/arbitrum/config.js
+// src/blockchain/networks/ethereum/config.js
 import { networksConfig } from "../../../config/networks.config.js";
 
 export const NETWORK_CONFIG = {
-  name: "etherium",
+  name: "ethereum",
   chainId: 1,
-  RPC_URL: networksConfig.etherium.RPC_URL,
+  RPC_URL: networksConfig.ethereum.RPC_URL,
 
   // Aave
   aave: {

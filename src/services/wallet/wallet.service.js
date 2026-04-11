@@ -1,6 +1,6 @@
 // src/services/wallet.service.js
 import { ethers } from "ethers";
-import { assertCanAddWallet } from "../../integrations/private/access-policy.js";
+import { assertCanAddWallet } from "../subscription/subscription.service.js";
 import { db } from "../../db/index.js";
 import {
   setAllWalletsToCache,
@@ -118,6 +118,8 @@ export async function getAllWallets() {
   if (wallets && wallets.size > 0) {
     return wallets;
   }
+
+  setAllWalletsToCache(wallets);
 
   // 2️⃣ Cache miss → DB
   const walletsArray = Object.values(await db.wallets.findAll());

@@ -108,6 +108,7 @@ export async function bootstrapABI() {
         } catch (e) {
           console.error(
             `❌ ABI bootstrap failed for ${networkName}/${protocolName}/${contractName} (${address})`,
+            new Date().toISOString(),
             e.message,
           );
         }

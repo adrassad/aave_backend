@@ -2,27 +2,7 @@
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
-
-const ABI_EXPLORERS = {
-  ethereum: {
-    url: process.env.ETHEREUM_EXPLORER,
-    chainId: 1,
-    key: process.env.ETHEREUM_EXPLORER_KEY,
-    type: "v2",
-  },
-  arbitrum: {
-    url: process.env.ARBITRUM_EXPLORER,
-    chainId: 42161,
-    key: process.env.ARBITRUM_EXPLORER_KEY,
-    type: "v2",
-  },
-  avalanche: {
-    url: process.env.AVALANCHE_EXPLORER,
-    chainId: 43114,
-    key: process.env.AVALANCHE_EXPLORER_KEY,
-    type: "snowtrace",
-  },
-};
+import { networksConfig } from "../../config/networks.config.js";
 
 export class ABILoaderService {
   constructor(baseDir) {
@@ -70,9 +50,23 @@ export class ABILoaderService {
     console.log(`✅ ABI saved → ${network}/${protocol}/${contract}`);
   }
 
+  getNetworkConfig(network) {
+    const config = networksConfig[network];
+
+    if (!config) {
+      throw new Error(`Network config not found for "${network}"`);
+    }
+
+    if (!config.enabled) {
+      throw new Error(`Network "${network}" is disabled`);
+    }
+
+    return config;
+  }
+
   /** Fetch ABI from explorer */
   async fetchABI(network, address) {
-    const explorer = ABI_EXPLORERS[network];
+    const explorer = this.getNetworkConfig(network).explorer;
     if (!explorer || !explorer.url)
       throw new Error(`Explorer not configured for ${network}`);
 

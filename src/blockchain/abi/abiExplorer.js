@@ -21,6 +21,13 @@ const EXPLORERS = {
     url: process.env.AVALANCHE_EXPLORER,
     apiKey: process.env.AVALANCHE_EXPLORER_KEY,
   },
+
+  base: {
+    type: "etherscanV2",
+    url: process.env.BASE_EXPLORER,
+    chainId: 8453,
+    apiKey: process.env.BASE_EXPLORER_KEY,
+  },
 };
 
 export async function fetchABI(network, address) {

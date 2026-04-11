@@ -9,7 +9,7 @@ import {
 } from "../wallet/wallet.service.js";
 import { calculateAndStoreHF } from "./healthfactor.core.js";
 import { extractUniqueAddresses } from "../wallet/wallet.utils.js";
-import { getUserStatus } from "../user/user.service.js";
+import { getUserProfile } from "../user/user.service.js";
 
 const CONCURRENCY = 5;
 
@@ -61,7 +61,7 @@ export async function collectHealthFactors({
     const addresses = extractUniqueAddresses(resultMap);
     const mapHF = await calcHF(networks, addresses, checkChange);
     for (const [uId, walletsMap] of resultMap.entries()) {
-      const stat = await getUserStatus(uId);
+      const stat = await getUserProfile(uId);
       if (!stat.isActive) continue;
       const userAddressMap = new Map();
       let hfIsChanged = false;
@@ -69,7 +69,11 @@ export async function collectHealthFactors({
         const networkMap = new Map();
         for (const network of Object.values(networks)) {
           const resultHF = mapHF.get(address)?.get(network.name);
-          if (resultHF && resultHF.isChanged) {
+          if (
+            resultHF &&
+            resultHF.isChanged &&
+            Number(stat.threshold_hf) > resultHF.healthfactor
+          ) {
             networkMap.set(network.name, resultHF.healthfactor);
             hfIsChanged = true;
           }
