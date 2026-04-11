@@ -141,7 +141,11 @@ export class AaveAdapter extends AaveBaseAdapter {
         };
       });
     } catch (e) {
-      console.error("Batch price fetch failed:", e.message);
+      console.error(
+        "Batch price fetch failed:",
+        new Date().toISOString(),
+        e.message,
+      );
     }
 
     return prices;

@@ -24,7 +24,7 @@ router.get("/:ticker", async (req, res) => {
     }
     res.json(priceByNetwork);
   } catch (e) {
-    console.error("❌ prices API failed:", e);
+    console.error("❌ prices API failed:", new Date().toISOString(), e);
     res.status(500).json({ error: "Internal error" });
   }
 });

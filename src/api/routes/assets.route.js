@@ -9,7 +9,7 @@ router.get("/", async (req, res) => {
     const assets = await getAssetsByNetworks(); // ждём результат
     res.json(assets);
   } catch (e) {
-    console.error("❌ Failed to get assets:", e);
+    console.error("❌ Failed to get assets:", new Date().toISOString(), e);
     res.status(500).json({ error: "Failed to get assets" });
   }
 });

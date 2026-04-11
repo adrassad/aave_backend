@@ -33,7 +33,11 @@ export class UserRepository extends BaseRepository {
   }
 
   async updateUser(id, fields) {
-    const allowedFields = ["subscription_level", "subscription_end"];
+    const allowedFields = [
+      "subscription_level",
+      "subscription_end",
+      "threshold_hf",
+    ];
     return super.update(id, fields, allowedFields);
   }
 

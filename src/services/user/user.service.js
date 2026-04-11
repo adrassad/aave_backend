@@ -1,6 +1,11 @@
 // src/services/user.service.js
 import { db } from "../../db/index.js";
-import { setUserToCache, getUserCache } from "../../cache/user.cache.js";
+import {
+  setUserToCache,
+  getUserCache,
+  getUsersPageFromCache,
+  setUsersToCache,
+} from "../../cache/user.cache.js";
 
 /**
  * Создать пользователя, если его нет
@@ -48,18 +53,35 @@ export async function isPro(telegramId) {
   return new Date(user.subscription_end) > new Date();
 }
 
+export async function getAllUsers() {
+  const users = await getUsersPageFromCache();
+  if (!users) {
+    return await db.users.findAll();
+  }
+  return users;
+}
+export async function getAllUsersDb() {
+  const users = await db.users.findAll();
+  setUsersToCache(users);
+  return users;
+}
+
 export async function getAllProUsers() {
-  return await db.users.getAllPro();
+  const users = await getAllUsers();
+  return users.filter((u) => u.subscription_level === "pro");
 }
 
 /**
  * Статус пользователя (для /status)
  */
-export async function getUserStatus(telegramId) {
-  const user = await getUserCache(telegramId);
+export async function getUserProfile(telegramId) {
+  let user = await getUserCache(telegramId);
 
   if (!user) {
-    return null;
+    user = await db.users.findById(telegramId);
+    if (!user) return null;
+
+    await setUserToCache(user.telegram_id, user);
   }
 
   const now = new Date();
@@ -68,9 +90,14 @@ export async function getUserStatus(telegramId) {
   const isActive = end ? end > now : false;
 
   return {
+    telegram_id: user.telegram_id,
+    username: user.name,
     level: user.subscription_level,
     subscriptionEnd: end,
     isActive,
+    threshold_hf: user.threshold_hf,
+    first_name: user.first_name,
+    last_name: user.last_name,
   };
 }
 
