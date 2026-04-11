@@ -65,6 +65,36 @@ The system is **read-only** and does not execute transactions.
 
 ---
 
+## 🌐 Supported Networks
+
+The bot currently supports monitoring Aave positions on the following networks:
+
+- **Ethereum**
+- **Arbitrum**
+- **Avalanche**
+- **Base**
+
+Each network is integrated through a unified blockchain adapter layer, allowing:
+
+- Health Factor tracking
+- Position monitoring
+- Price synchronization
+- Risk alerts
+
+---
+
+### ⚙️ Multi-chain support
+
+As DeFi evolves into a multi-chain ecosystem, the system is designed to be easily extensible.
+
+Adding a new network typically involves:
+
+- Registering network configuration (RPC, chain ID)
+- Adding protocol adapter support
+- Syncing assets and prices
+
+---
+
 ## 🏗 System Architecture
 
 The application starts from `src/index.js`, initializes core services, and runs:
