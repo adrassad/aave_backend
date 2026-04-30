@@ -43,6 +43,30 @@ src/
   integrations/private/ # public adapters/stubs for private infrastructure
 ```
 
+### Architecture diagram
+
+```mermaid
+flowchart TB
+    U1[Telegram User] --> BOT[Telegram Bot Layer]
+    U2[API Client] --> API[Express API Layer]
+
+    APP[src/index.js + app/bootstrap.js + app/runtime.js]
+    APP --> BOT
+    APP --> API
+    APP --> CRON[Cron Layer]
+
+    BOT --> SVC[Service Layer]
+    API --> SVC
+    CRON --> SVC
+
+    SVC --> BC[Blockchain Layer<br/>adapters + ABI + networks]
+    SVC --> DB[(PostgreSQL)]
+    SVC --> CACHE[(Redis Cache)]
+    SVC --> PRIV[Private Integration Adapters]
+
+    BC --> RPC[EVM RPC Providers]
+```
+
 ### Runtime flow
 
 1. `src/index.js` starts application.
