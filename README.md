@@ -1,459 +1,139 @@
-# AAVE Health Factor Bot
+# CryPrice Backend (Public)
 
-A **Telegram bot and backend service** for monitoring **AAVE lending
-positions and Health Factor risk** across EVM-compatible blockchain
-networks.
+Production-style Node.js backend for monitoring Aave positions and liquidation risk across multiple EVM networks.
 
-The system provides **read-only wallet tracking**, track **Health
-Factor** and liquidation risk, monitors **price changes**, and sends **Telegram
-notifications** when risk conditions are met.
+The project combines a Telegram bot, public API, scheduled data pipelines, Redis caching, and PostgreSQL persistence in a layered architecture.
 
----
+## Why this project matters
 
-## 📑 Table of Contents
+- Solves a real Web3 problem: continuous risk tracking for lending positions.
+- Uses a modular architecture with clear separation of API, bot, services, blockchain adapters, and data layer.
+- Demonstrates practical backend engineering: cron orchestration, cache strategy, repository pattern, and integration boundaries.
 
-- [Overview](#-overview)
-- [Features](#-features)
-- [System Architecture](#-system-architecture)
-- [Project Structure](#-project-structure)
-- [Core Services](#-core-services)
-- [Notifications](#-notifications)
-- [Internationalization](#-internationalization)
-- [Public API](#-public-api)
-- [Cron Jobs](#-cron-jobs)
-- [Storage](#-storage)
-- [Security](#-security)
-- [Future Improvements](#-future-improvements)
-- [Internal Logic](#-internal-logic)
-- [License](#-license)
+## Core capabilities
 
----
+- Multi-network Aave monitoring (`Ethereum`, `Arbitrum`, `Avalanche`, `Base`).
+- Health Factor collection and risk alerting.
+- Price synchronization and price-change alerts.
+- Telegram UX for wallets, positions, HF checks, and threshold management.
+- Read-only public API endpoints for health, assets, prices, and networks.
 
-## 📌 Overview
+## Tech stack
 
-This project is a **modular layered backend** for monitoring DeFi lending positions in AAVE.
+- Runtime: `Node.js` (ES modules)
+- API: `Express`
+- Bot: `Telegraf`
+- Blockchain: `ethers`
+- Storage: `PostgreSQL` (`pg`)
+- Cache: `Redis` (`ioredis`)
+- Jobs: `node-cron`
 
-It combines:
+## High-level architecture
 
-- Telegram bot (user interaction)
-- REST API (public endpoints)
-- Service layer (business logic)
-- Blockchain adapter (AAVE integration)
-- Redis cache
-- PostgreSQL storage
-- Cron jobs for background processing
-
-The system is **read-only** and does not execute transactions.
-
----
-
-## 🚀 Features
-
-- Monitor **AAVE lending positions**
-- Track **Health Factor** (from AAVE account data)
-- Detect **liquidation risk**
-- Track **token prices**
-- **Price change alerts (>5%)**
-- **Quick asset lookup via ticker input (BTC, ETH)**
-- Telegram notifications
-- Public REST API:
-  - `/prices`
-  - `/assets`
-  - `/networks`
-- Redis caching
-- PostgreSQL persistence
-
----
-
-## 🌐 Supported Networks
-
-The bot currently supports monitoring Aave positions on the following networks:
-
-- **Ethereum**
-- **Arbitrum**
-- **Avalanche**
-- **Base**
-
-Each network is integrated through a unified blockchain adapter layer, allowing:
-
-- Health Factor tracking
-- Position monitoring
-- Price synchronization
-- Risk alerts
-
----
-
-### ⚙️ Multi-chain support
-
-As DeFi evolves into a multi-chain ecosystem, the system is designed to be easily extensible.
-
-Adding a new network typically involves:
-
-- Registering network configuration (RPC, chain ID)
-- Adding protocol adapter support
-- Syncing assets and prices
-
----
-
-## 🏗 System Architecture
-
-The application starts from `src/index.js`, initializes core services, and runs:
-
-- Telegram bot
-- REST API
-- Cron jobs
-
-### Runtime structure
-
-- **Telegram bot** handles user interaction, wallet management, position views, Health Factor checks, and ticker-based price lookup.
-- **REST API** exposes only public read-only endpoints:
-  - `GET /health`
-  - `GET /assets`
-  - `GET /price/:ticker`
-  - `GET /networks`
-- **Cron jobs** periodically:
-  - sync assets
-  - sync prices
-  - sync Health Factor
-  - send price and HF alerts
-
-### Service boundaries
-
-- **API layer** uses:
-
-  - `Asset Service`
-  - `Price Service`
-  - `Network Service`
-
-- **Bot layer** uses:
-
-  - `Wallet Service`
-  - `Subscription Service`
-  - `Positions Service`
-  - `HealthFactor Collector`
-  - `Asset Service`
-  - `Price Service`
-
-- **Cron layer** uses:
-  - `Asset Service`
-  - `Price Service`
-  - `HealthFactor Service`
-  - `Price Alert Service`
-
-### Blockchain integration
-
-Blockchain access is centralized in `src/blockchain/index.js`, which resolves protocol adapters, RPC providers, ABI registry, and AAVE protocol integration.
-
-### Data layer
-
-- **PostgreSQL** stores persistent application data
-- **Redis** is used through cache modules for fast reads and temporary cached state
-
-```mermaid
-flowchart TB
-
-subgraph USERS["Users"]
-  U1["Telegram User"]
-  U2["API Client"]
-end
-
-subgraph APP["Application Runtime"]
-  INDEX["src/index.js"]
-  BOOT["app/bootstrap.js"]
-  RUN["app/runtime.js"]
-end
-
-subgraph ENTRY["Entry Points"]
-  TG["Telegram Bot"]
-  API["REST API"]
-  CRON["Cron Jobs"]
-end
-
-subgraph BOT["Bot Layer"]
-  CMD["Commands / Handlers / Scenes"]
-  NOTIFY["NotificationService"]
-end
-
-subgraph API_LAYER["API Layer"]
-  HEALTH_R["/health"]
-  ASSETS_R["/assets"]
-  PRICE_R["/price/:ticker"]
-  NETWORKS_R["/networks"]
-  RL["Rate Limit Middleware"]
-end
-
-subgraph SERVICES["Services"]
-  AS["Asset Service"]
-  PS["Price Service"]
-  NS["Network Service"]
-  WS["Wallet Service"]
-  US["User Service"]
-  POS["Positions Service"]
-  HF["HealthFactor Service"]
-  HFC["HealthFactor Collector/Core"]
-  SUB["Subscription Service"]
-  ALERT["Price Alert Service"]
-  BABI["Bootstrap ABI Service"]
-  BNET["Bootstrap Networks Service"]
-  BUSR["Bootstrap Users Service"]
-  BAS["Bootstrap Assets Service"]
-  BPR["Bootstrap Prices Service"]
-  BWAL["Bootstrap Wallets Service"]
-end
-
-subgraph BC["Blockchain Layer"]
-  BCI["blockchain/index.js"]
-  ADP["Adapters"]
-  NETREG["Networks Registry / RPC Providers"]
-  ABI["ABI Registry"]
-  AAVE["AAVE protocol integration"]
-end
-
-subgraph DATA["Data & Cache"]
-  PG["PostgreSQL"]
-  REDIS["Redis"]
-  CACHE["cache/*"]
-end
-
-U1 --> TG
-U2 --> API
-
-INDEX --> BOOT
-INDEX --> RUN
-
-BOOT --> BABI
-BOOT --> BNET
-BOOT --> BUSR
-BOOT --> BAS
-BOOT --> BPR
-BOOT --> BWAL
-
-RUN --> TG
-RUN --> API
-RUN --> CRON
-
-TG --> CMD
-CMD --> WS
-CMD --> SUB
-CMD --> POS
-CMD --> HFC
-CMD --> AS
-CMD --> PS
-HF --> NOTIFY
-ALERT --> NOTIFY
-
-API --> RL
-RL --> HEALTH_R
-RL --> ASSETS_R
-RL --> PRICE_R
-RL --> NETWORKS_R
-
-ASSETS_R --> AS
-PRICE_R --> AS
-PRICE_R --> PS
-PRICE_R --> NS
-NETWORKS_R --> NS
-
-CRON --> AS
-CRON --> PS
-CRON --> HF
-CRON --> ALERT
-
-POS --> BCI
-HFC --> BCI
-AS --> BCI
-PS --> BCI
-
-BCI --> ADP
-BCI --> NETREG
-BCI --> ABI
-ADP --> AAVE
-
-US --> PG
-WS --> PG
-AS --> PG
-PS --> PG
-NS --> PG
-
-US --> CACHE
-WS --> CACHE
-AS --> CACHE
-PS --> CACHE
-NS --> CACHE
-CACHE --> REDIS
+```text
+src/
+  app/                  # startup orchestration (bootstrap + runtime)
+  api/                  # express server, routes, middleware
+  bot/                  # telegram commands, handlers, scenes, i18n
+  services/             # business logic
+  blockchain/           # protocol adapters, ABI loader/registry, network registry
+  db/                   # schema init + repositories
+  cache/                # redis-backed cache modules
+  cron/                 # periodic sync jobs
+  integrations/private/ # public adapters/stubs for private infrastructure
 ```
 
----
+### Runtime flow
 
-## 📦 Project Structure
+1. `src/index.js` starts application.
+2. `app/bootstrap.js` initializes DB and bootstrap services.
+3. `app/runtime.js` runs cron jobs, Telegram bot, and API server.
 
+## Public API
+
+- `GET /health` - service health check
+- `GET /assets` - assets grouped by enabled networks
+- `GET /price/:ticker` - ticker price per network
+- `GET /networks` - enabled network list
+
+## Telegram commands
+
+- `/start`
+- `/help`
+- `/status`
+- `/profile`
+- `/positions`
+- `/healthfactor`
+- `/set_threshold <value>`
+
+## Environment configuration
+
+Create a local `.env` (never commit it):
+
+```env
+PORT_API=3000
+DATABASE_URL=postgres://user:password@localhost:5432/aave
+BOT_TOKEN=your_telegram_bot_token
+GEMINI_API_KEY=your_gemini_api_key
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+
+ETHEREUM_RPC_URL=
+ARBITRUM_RPC_URL=
+AVALANCHE_RPC_URL=
+BASE_RPC_URL=
+
+ETHEREUM_AAVE_ADDRESSES_PROVIDER=
+ARBITRUM_AAVE_ADDRESSES_PROVIDER=
+AVALANCHE_AAVE_ADDRESSES_PROVIDER=
+BASE_AAVE_ADDRESSES_PROVIDER=
 ```
-src
-├── api # REST API routes
-├── bot # Telegram bot logic
-├── services # Business logic layer
-├── blockchain # AAVE adapter and RPC integration
-├── cron # Scheduled jobs (prices, assets, HF)
-└── database # PostgreSQL and Redis setup
+
+## Local run
+
+```bash
+npm install
+node src/index.js
 ```
 
----
+## Cron jobs
 
-## 🧩 Core Services
+- `assetsUpdater.cron.js` - sync asset metadata
+- `priceUpdater.cron.js` - sync prices + emit price alerts
+- `HFUpdater.cron.js` - sync health factors + emit HF alerts
 
-### Asset Service
+## Public vs private boundaries
 
-- Manage supported assets
-- Store metadata
-- Handle collateral parameters
+This repository is intentionally adapted for public usage:
 
-### Price Service
+- Private infrastructure integrations are represented by adapters/stubs in `src/integrations/private`.
+- Sensitive production-only logic is abstracted behind gateways.
+- The codebase remains runnable for development and architecture review while keeping internal operational details private.
 
-- Fetch and normalize prices
-- Cache in Redis
-- Detect price changes (\>5%)
+## Engineering highlights
 
-### Network Service
+- Repository pattern for DB access (`src/db/repositories`).
+- Protocol adapter abstraction for blockchain integrations.
+- Cache-first read paths for hot data (`assets`, `prices`, `wallets`, `users`).
+- Explicit bootstrap stage for deterministic startup.
+- Centralized error messaging for Telegram workflows.
 
-- Manage blockchain networks
-- Store RPC endpoints and chain IDs
+## Security notes
 
-### Wallet Service
+- No private keys are stored.
+- Read-only wallet tracking (no signing/transactions).
+- Secrets must be managed via environment variables and rotated regularly.
+- `.env` must stay out of git history.
 
-- Add/remove wallets
-- Validate format
-- Link to users
+## Roadmap ideas
 
-### User Service
+- Add automated test suite (unit + integration).
+- Introduce structured logging and metrics.
+- Add distributed locks for cron in multi-instance deployments.
+- Improve API validation and standardized error contracts.
 
-- Manage users
-- Stores user data and preferences
-
-### Positions Service
-
-- Fetch AAVE reserves
-- Calculate collateral, debt, borrow capacity
-
-### HealthFactor Service
-
-- Retrieves account risk data from AAVE (getUserAccountData)
-- Tracks Health Factor
-- Detects liquidation risk
-
-### Subscription Service
-
-- Manage plans (Free / Pro)
-- Wallet & notification limits
-- Feature gating
-
----
-
-## 🔔 Notifications
-
-- Health Factor alerts (based on AAVE account data)
-- Price change alerts (\>5%)
-
----
-
-## 🌍 Internationalization
-
-- English
-- Russian
-
-Language is auto-detected from Telegram.
-
----
-
-## 🔌 Public API
-
-### Health
-
-GET /health
-Returns service status
-
-### Assets
-
-GET /assets
-Returns supported tokens
-
-### Prices
-
-GET /price/:ticker
-Returns token price
-
-### Networks
-
-GET /networks
-Returns supported networks
-
----
-
-## ⚙️ Cron Jobs
-
-Located in src/cron:
-
-assetsUpdater.cron.js — updates asset metadata
-
-priceUpdater.cron.js — updates prices and triggers price alerts
-
-HFUpdater.cron.js — updates Health Factor data
-
----
-
-## 🗄 Storage
-
-### PostgreSQL
-
-- users
-- wallets
-- healthfactors
-- assets
-- prices
-- networks
-
-### Redis
-
-- ABI caching
-- assets caching
-- price caching
-- network caching
-- user caching
-- wallet caching
-- fast reads
-
----
-
-## 🔐 Security
-
-- No private keys stored
-- Read-only wallet tracking
-- Input validation
-- Sensitive data not exposed
-
----
-
-## Future Improvements
-
-- Add RPC failover and retry policies for higher availability
-- Introduce a queue for scalable alert processing if notification volume grows
-- Improve observability with structured logs and metrics
-- Tune cron frequency based on target alert latency
-
----
-
-## 🔒 Internal Logic
-
-Some internal components of the system are not included in this repository.
-
-This includes parts of:
-
-- subscription management
-- alerting rules and thresholds
-
-These components are intentionally kept private as part of the production deployment.
-
----
-
-## 📜 License
+## License
 
 MIT
