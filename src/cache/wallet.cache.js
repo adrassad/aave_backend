@@ -59,7 +59,22 @@ export async function getWalletsByUser(userId) {
 export async function getAllWalletsCache() {
   if (!redis || redis.status === "end") return new Map();
   try {
-    const keys = await redis.keys("wallets:*"); // все пользователи
+    const keys = [];
+    let cursor = "0";
+    do {
+      const [nextCursor, batch] = await redis.scan(
+        cursor,
+        "MATCH",
+        "wallets:*",
+        "COUNT",
+        200,
+      );
+      cursor = nextCursor;
+      if (batch?.length) {
+        keys.push(...batch);
+      }
+    } while (cursor !== "0");
+
     const result = new Map();
 
     if (keys.length === 0) return result;

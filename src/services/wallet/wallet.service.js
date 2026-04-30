@@ -17,7 +17,7 @@ function normalizeAddress(address) {
 
 export async function addUserWallet(telegramId, address, label = null) {
   //🔐 ПРОВЕРКА ПОДПИСКИ
-  const count = await db.wallets.exists(telegramId);
+  const count = await db.wallets.countByUserId(telegramId);
   await assertCanAddWallet(telegramId, count);
 
   // 🔐 Проверка адреса
@@ -93,12 +93,11 @@ export async function getUserWallet(telegramId, address) {
   }
 
   // 2️⃣ cache miss → идем в БД
-  const walletExists = await db.wallets.walletExists(
+  const walletFromDb = await db.wallets.findByUserAndAddress(
     telegramId,
     normalizedAddress,
   );
-
-  if (!walletExists) return null;
+  if (!walletFromDb) return null;
 
   // 3️⃣ обновляем кеш (чтобы не было частичного кеша)
   if (!walletsMap || walletsMap.size === 0) {

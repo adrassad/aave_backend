@@ -29,8 +29,10 @@ export default {
   /start — start
   /help — help
   /status - user status
+  /profile - user profile
   /positions - positions in Aave
-  /healthfactor - 🛡 Show health factor on Aave`,
+  /healthfactor - 🛡 Show health factor on Aave
+  /set_threshold <value> - 🎯 Set HF threshold`,
 
   command_wallet_no_add:
     "⚠️ You don't have any wallets yet. Add one via ➕ Add Wallet.",
@@ -84,9 +86,15 @@ export default {
   subscribe_type: "Type:",
   subscribe_rules: "Access until:",
   subscribe_upgrade_to_pro: "✅ You have renewed your Pro subscription.",
+  profile_title: "👤 Profile",
+  profile_username: "Username:",
+  profile_threshold: "HF threshold:",
 
   // Healthfactor
   healthfactor_overview: "🛡 Your current Health Factor:",
+  threshold_usage:
+    "⚠️ Usage: /set_threshold <value from 0.1 to 10>\nExample: /set_threshold 1.2",
+  threshold_saved: "✅ New HF threshold saved:",
 
   // Support
   support_write_message: `✍️ Write your message to support.

@@ -11,18 +11,18 @@ export function walletDeleteHandler(bot) {
       await removeUserWallet(userId, walletId);
 
       await ctx.answerCbQuery(
-        lanhuage(ctx.from.lanhuage_code, "wallet_deleted"),
+        lanhuage(ctx.from.language_code, "wallet_deleted"),
       );
       await ctx.editMessageText(
-        lanhuage(ctx.from.lanhuage_code, "wallet_deleted_success"),
+        lanhuage(ctx.from.language_code, "wallet_deleted_success"),
       );
     } catch (e) {
       console.error(e);
       await ctx.answerCbQuery(
-        lanhuage(ctx.from.lanhuage_code, "wallet_deleted_error"),
+        lanhuage(ctx.from.language_code, "wallet_deleted_error"),
       );
       await ctx.reply(
-        lanhuage(ctx.from.lanhuage_code, "wallet_deleted_failed"),
+        lanhuage(ctx.from.language_code, "wallet_deleted_failed"),
       );
     }
   });

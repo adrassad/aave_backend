@@ -22,6 +22,29 @@ export async function initDb() {
     );
   `);
 
+  // backwards compatibility for old schema versions that used "name" instead of "username"
+  await dbClient.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS username TEXT;
+  `);
+
+  await dbClient.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'users'
+          AND column_name = 'name'
+      ) THEN
+        UPDATE users
+        SET username = COALESCE(username, name)
+        WHERE username IS NULL;
+      END IF;
+    END $$;
+  `);
+
   await dbClient.query(`
     CREATE OR REPLACE FUNCTION update_updated_at_column()
     RETURNS TRIGGER AS $$
@@ -182,8 +205,12 @@ export async function initDb() {
   `);
 
   await dbClient.query(`
-    CREATE INDEX IF NOT EXISTS idx_monitors_user
-    ON monitors(user_id);
+    DO $$
+    BEGIN
+      IF to_regclass('public.monitors') IS NOT NULL THEN
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_monitors_user ON monitors(user_id)';
+      END IF;
+    END $$;
   `);
 
   //

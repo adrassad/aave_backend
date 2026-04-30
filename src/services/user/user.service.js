@@ -24,7 +24,7 @@ export async function createIfNotExists(user_data) {
         last_name: user_data.last_name,
       });
     }
-    await setUserToCache(user);
+    await setUserToCache(user.telegram_id, user);
   } else {
     user = await db.users.update(user_data.id, {
       username: user_data.username,
@@ -34,7 +34,7 @@ export async function createIfNotExists(user_data) {
     if (!user) {
       user = await db.users.create(user_data);
     }
-    await setUserToCache(user);
+    await setUserToCache(user.telegram_id, user);
   }
 
   return user;
@@ -91,7 +91,7 @@ export async function getUserProfile(telegramId) {
 
   return {
     telegram_id: user.telegram_id,
-    username: user.name,
+    username: user.username,
     level: user.subscription_level,
     subscriptionEnd: end,
     isActive,
@@ -99,6 +99,10 @@ export async function getUserProfile(telegramId) {
     first_name: user.first_name,
     last_name: user.last_name,
   };
+}
+
+export async function getUserStatus(telegramId) {
+  return getUserProfile(telegramId);
 }
 
 export async function loadUsersToCache() {

@@ -1,13 +1,11 @@
 // src/services/aave/positions.collector.js
 import pLimit from "p-limit";
-import { getEnabledNetworks } from "../network/network.service.js";
 import { getAllWallets, getUserWallets } from "../wallet/wallet.service.js";
 import { getWalletPositions } from "./position.service.js";
 
 const CONCURRENCY = 5; // общий лимит RPC
 
 export async function collectPositions({ userId = null, walletId = null }) {
-  const networks = await getEnabledNetworks();
   const limit = pLimit(CONCURRENCY);
 
   const resultMap = new Map();
@@ -37,36 +35,38 @@ export async function collectPositions({ userId = null, walletId = null }) {
   // 🟢 2. Сбор позиций
   for (const [address, records] of wallets.entries()) {
     for (const record of records) {
-      for (const network of Object.values(networks)) {
-        tasks.push(
-          limit(async () => {
-            try {
-              const positions = await getWalletPositions(
-                record.user_id,
-                address,
-              );
+      tasks.push(
+        limit(async () => {
+          try {
+            const positionsByNetwork = await getWalletPositions(
+              record.user_id,
+              address,
+            );
 
-              if (!resultMap.has(record.user_id)) {
-                resultMap.set(record.user_id, new Map());
-              }
-
-              const walletMap = resultMap.get(record.user_id);
-
-              if (!walletMap.has(address)) {
-                walletMap.set(address, new Map());
-              }
-
-              walletMap.get(address).set(network.name, positions[network.name]);
-            } catch (err) {
-              console.error(
-                `Positions error: wallet=${address} network=${network.name}`,
-                new Date().toISOString(),
-                err.message,
-              );
+            if (!resultMap.has(record.user_id)) {
+              resultMap.set(record.user_id, new Map());
             }
-          }),
-        );
-      }
+
+            const walletMap = resultMap.get(record.user_id);
+
+            if (!walletMap.has(address)) {
+              walletMap.set(address, new Map());
+            }
+
+            for (const [networkName, positions] of Object.entries(
+              positionsByNetwork,
+            )) {
+              walletMap.get(address).set(networkName, positions);
+            }
+          } catch (err) {
+            console.error(
+              `Positions error: wallet=${address}`,
+              new Date().toISOString(),
+              err.message,
+            );
+          }
+        }),
+      );
     }
   }
 

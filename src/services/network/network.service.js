@@ -7,8 +7,8 @@ import {
 export async function getEnabledNetworks() {
   const cached = await getEnabledNetworksCache();
   if (!cached || Object.keys(cached).length === 0) {
-    const networks = getEnabledNetworksFromDB();
-    setNetworksToCashe(networks);
+    const networks = await getEnabledNetworksFromDB();
+    await setNetworksToCashe(networks);
     return networks;
   }
   return cached;
@@ -29,7 +29,8 @@ export async function createNetworks(networks) {
 }
 
 export async function loadNetworksToCache() {
-  await setNetworksToCashe(getEnabledNetworksFromDB());
+  const networks = await getEnabledNetworksFromDB();
+  await setNetworksToCashe(networks);
 }
 
 export async function getEnabledNetworksFromDB() {

@@ -42,4 +42,29 @@ export class WalletRepository extends BaseRepository {
     );
     return res.rowCount > 0;
   }
+
+  async findByUserAndAddress(userId, address) {
+    const res = await this.db.query(
+      `
+        SELECT *
+        FROM wallets
+        WHERE user_id = $1 AND address = $2
+        LIMIT 1
+        `,
+      [userId, address.toLowerCase()],
+    );
+    return res.rows[0] || null;
+  }
+
+  async countByUserId(userId) {
+    const res = await this.db.query(
+      `
+        SELECT COUNT(*)::int AS count
+        FROM wallets
+        WHERE user_id = $1
+        `,
+      [userId],
+    );
+    return res.rows[0]?.count ?? 0;
+  }
 }

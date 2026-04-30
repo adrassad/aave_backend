@@ -11,7 +11,7 @@ export async function handleReturn(ctx) {
   switch (target) {
     case RETURNS.MAIN_MENU:
       await ctx.reply(
-        lanhuage(ctx.from.lanhuage_code, "main_menu"),
+        lanhuage(ctx.from.language_code, "main_menu"),
         mainKeyboard(),
       );
       break;

@@ -1,8 +1,14 @@
 // src/services/aave.service.js
+import { formatUnits } from "ethers";
 import { getUserPositions } from "../../blockchain/index.js";
 import { getEnabledNetworks } from "../network/network.service.js";
 import { getAssetPriceUSD } from "../price/price.service.js";
 import { getAssetByAddress } from "../asset/asset.service.js";
+
+function toTokenAmount(rawValue, decimals) {
+  const amount = Number(formatUnits(rawValue ?? 0n, Number(decimals) || 0));
+  return Number.isFinite(amount) ? amount : 0;
+}
 
 /*
  * Получение позиций пользователя в Aave
@@ -38,21 +44,20 @@ export async function getWalletPositions(userId, walletAddress) {
       const price_usd = await getAssetPriceUSD(network.id, address);
 
       if (position.aTokenBalance > 0n) {
-        const amount = Number(position.aTokenBalance) / 10 ** decimals;
+        const amount = toTokenAmount(position.aTokenBalance, decimals);
         const usd = amount * price_usd;
         supplies.push({
           symbol,
           amount,
           usd,
-          collateral: position.collateralEnabled,
+          collateral: position.collateral ?? position.collateralEnabled ?? false,
         });
         totalSuppliedUsd += usd;
       }
 
       if (position.variableDebt > 0n || position.stableDebt > 0n) {
-        const variableDebtAmount =
-          Number(position.variableDebt) / 10 ** decimals;
-        const stableDebtAmount = Number(position.stableDebt) / 10 ** decimals;
+        const variableDebtAmount = toTokenAmount(position.variableDebt, decimals);
+        const stableDebtAmount = toTokenAmount(position.stableDebt, decimals);
         const debt = variableDebtAmount + stableDebtAmount;
         const usd = debt * price_usd;
         borrows.push({

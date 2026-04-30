@@ -10,7 +10,7 @@ export class UserRepository extends BaseRepository {
       `
       INSERT INTO users (
         telegram_id,
-        name,
+        username,
         first_name,
         last_name,
         subscription_level,

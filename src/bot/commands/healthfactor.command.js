@@ -15,7 +15,9 @@ export function healthFactorCommand(bot) {
     const wallets = await getUserWallets(userId);
 
     if (!wallets.size) {
-      return ctx.reply(lanhuage(ctx.from.language_code, command_wallet_no_add));
+      return ctx.reply(
+        lanhuage(ctx.from.language_code, "command_wallet_no_add"),
+      );
     }
 
     const buttons = [];

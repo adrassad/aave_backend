@@ -2,13 +2,17 @@
 import { startCommand } from "./start.command.js";
 import { helpCommand } from "./help.command.js";
 import { statusCommand } from "./status.command.js";
+import { profileCommand } from "./profile.command.js";
 import { positionsCommand } from "./positions.command.js";
 import { healthFactorCommand } from "./healthfactor.command.js";
+import { setThresholdCommand } from "./setThreshold.command.js";
 
 export function registerCommands(bot) {
   startCommand(bot);
   helpCommand(bot);
   statusCommand(bot);
+  profileCommand(bot);
   positionsCommand(bot);
   healthFactorCommand(bot);
+  setThresholdCommand(bot);
 }

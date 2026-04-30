@@ -28,8 +28,10 @@ export default {
   /start — начать
   /help — помощь
   /status - статус пользователя
+  /profile - профиль пользователя
   /positions - позиции на aave
-  /healthfactor - 🛡 Показать healthfacror на aave`,
+  /healthfactor - 🛡 Показать healthfacror на aave
+  /set_threshold <значение> - 🎯 Установить порог HF`,
   command_wallet_no_add:
     "⚠️ У вас ещё нет кошельков. Добавьте через ➕ Add Wallet.",
   command_wallet_select:
@@ -85,9 +87,15 @@ export default {
   subscribe_type: "Тип:",
   subscribe_rules: "Доступ до:",
   subscribe_upgrade_to_pro: "✅ Вы продлили pro-подписку.",
+  profile_title: "👤 Профиль",
+  profile_username: "Username:",
+  profile_threshold: "Порог HF:",
 
   // Healthfactor
   healthfactor_overview: "🛡 Ваш текущий Health Factor:",
+  threshold_usage:
+    "⚠️ Использование: /set_threshold <значение от 0.1 до 10>\nПример: /set_threshold 1.2",
+  threshold_saved: "✅ Новый порог HF сохранен:",
 
   //support
   support_write_message: `✍️ Напишите ваше сообщение в поддержку.

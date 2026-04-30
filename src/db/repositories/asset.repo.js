@@ -12,7 +12,7 @@ export class AssetRepository extends BaseRepository {
       `
         INSERT INTO assets (network_id, address, symbol, decimals)
         VALUES ($1, $2, $3, $4)
-        ON CONFLICT (address)
+        ON CONFLICT (network_id, address)
         DO UPDATE SET
           symbol = EXCLUDED.symbol,
           decimals = EXCLUDED.decimals
